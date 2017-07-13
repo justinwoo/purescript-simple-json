@@ -11,10 +11,11 @@ import Test.Spec (describe, it)
 import Test.Spec.Assertions (shouldEqual)
 import Test.Spec.Reporter (consoleReporter)
 import Test.Spec.Runner (RunnerEffects, run)
-import Type.Proxy (Proxy(..))
 
-handleJSON :: forall a. ReadForeign a => Proxy a -> String -> Either MultipleErrors a
-handleJSON _ json = runExcept $ readJSON json
+type E a = Either MultipleErrors a
+
+handleJSON :: forall a. ReadForeign a => String -> E a
+handleJSON json = runExcept $ readJSON json
 
 type MyTest =
   { a :: Int
@@ -27,12 +28,12 @@ main :: Eff (RunnerEffects ()) Unit
 main = run [consoleReporter] do
   describe "readJSON" do
     it "works with proper JSON" do
-      let result = handleJSON (Proxy :: Proxy MyTest) """
+      let result = handleJSON """
         { "a": 1, "b": "asdf", "c": true, "d": ["A", "B"]}
       """
-      isRight result `shouldEqual` true
+      isRight (result :: E MyTest) `shouldEqual` true
     it "fails with invalid JSON" do
-      let result = handleJSON (Proxy :: Proxy MyTest) """
+      let result = handleJSON """
         { "c": 1, "d": 2}
       """
-      isRight result `shouldEqual` false
+      isRight (result :: E MyTest) `shouldEqual` false
