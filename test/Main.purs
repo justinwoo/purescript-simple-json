@@ -3,9 +3,11 @@ module Test.Main where
 import Prelude
 
 import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Console (logShow)
 import Control.Monad.Except (runExcept)
 import Data.Either (Either, isRight)
 import Data.Foreign (MultipleErrors)
+import Data.Foreign.NullOrUndefined (NullOrUndefined)
 import Simple.JSON (class ReadForeign, readJSON)
 import Test.Spec (describe, it)
 import Test.Spec.Assertions (shouldEqual)
@@ -22,6 +24,7 @@ type MyTest =
   , b :: String
   , c :: Boolean
   , d :: Array String
+  , e :: NullOrUndefined (Array String)
   }
 
 main :: Eff (RunnerEffects ()) Unit
@@ -37,3 +40,8 @@ main = run [consoleReporter] do
         { "c": 1, "d": 2}
       """
       isRight (result :: E MyTest) `shouldEqual` false
+    it "works with JSON containing NullOrUndefined" do
+      let result = handleJSON """
+        { "a": 1, "b": "asdf", "c": true, "d": ["A", "B"], "e": ["C", "D"]}
+      """
+      isRight (result :: E MyTest) `shouldEqual` true
