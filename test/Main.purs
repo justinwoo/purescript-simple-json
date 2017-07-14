@@ -23,8 +23,16 @@ type MyTest =
   , b :: String
   , c :: Boolean
   , d :: Array String
+  }
+
+type MyTestNull =
+  { a :: Int
+  , b :: String
+  , c :: Boolean
+  , d :: Array String
   , e :: NullOrUndefined (Array String)
   }
+
 
 main :: Eff (RunnerEffects ()) Unit
 main = run [consoleReporter] do
@@ -39,8 +47,13 @@ main = run [consoleReporter] do
         { "c": 1, "d": 2}
       """
       isRight (result :: E MyTest) `shouldEqual` false
-    it "works with JSON containing NullOrUndefined" do
+    it "works with JSON lacking NullOrUndefined field" do
+      let result = handleJSON """
+        { "a": 1, "b": "asdf", "c": true, "d": ["A", "B"]}
+      """
+      isRight (result :: E MyTestNull) `shouldEqual` true
+    it "works with JSON containing NullOrUndefined field" do
       let result = handleJSON """
         { "a": 1, "b": "asdf", "c": true, "d": ["A", "B"], "e": ["C", "D"]}
       """
-      isRight (result :: E MyTest) `shouldEqual` true
+      isRight (result :: E MyTestNull) `shouldEqual` true
