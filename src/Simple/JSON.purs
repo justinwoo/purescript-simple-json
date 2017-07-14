@@ -5,6 +5,7 @@ import Prelude
 import Data.Foreign (F, Foreign, readArray, readBoolean, readChar, readInt, readNumber, readString)
 import Data.Foreign.Index (readProp)
 import Data.Foreign.JSON (parseJSON)
+import Data.Foreign.NullOrUndefined (NullOrUndefined, readNullOrUndefined)
 import Data.StrMap (StrMap, empty, singleton, union)
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
 import Data.Traversable (sequence)
@@ -45,6 +46,9 @@ instance readArray :: ReadForeign a => ReadForeign (Array a) where
   readImpl = readElements <=< readArray
     where
       readElements xs = sequence $ readImpl <$> xs
+
+instance readNullOrUndefined :: ReadForeign a => ReadForeign (NullOrUndefined a) where
+  readImpl = readNullOrUndefined readImpl
 
 instance readRecord ::
   ( RowToList fields fieldList
