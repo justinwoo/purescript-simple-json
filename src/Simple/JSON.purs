@@ -6,12 +6,11 @@ import Data.Foreign (F, Foreign, readArray, readBoolean, readChar, readInt, read
 import Data.Foreign.Index (readProp)
 import Data.Foreign.JSON (parseJSON)
 import Data.Foreign.NullOrUndefined (NullOrUndefined, readNullOrUndefined)
-import Data.StrMap (StrMap, empty, singleton, union)
+import Data.Record (insert)
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
 import Data.Traversable (sequence)
-import Type.Proxy (Proxy(..))
-import Type.Row (class ListToRow, class RowToList, Cons, Nil, kind RowList)
-import Unsafe.Coerce (unsafeCoerce)
+import Type.Equality (class TypeEquals, to)
+import Type.Row (class ListToRow, class RowLacks, class RowToList, Cons, Nil, RLProxy(RLProxy), RProxy(..), kind RowList)
 
 -- | Read a JSON string to a type `a` using `F a`. Useful with record types.
 readJSON :: forall a
@@ -20,7 +19,13 @@ readJSON :: forall a
   -> F a
 readJSON = readImpl <=< parseJSON
 
--- | A class for reading foreign values to a type. Warning: This class should not be instantiated. 
+read :: forall a
+  .  ReadForeign a
+  => Foreign
+  -> F a
+read = readImpl
+
+-- | A class for reading foreign values to a type. Warning: This class should not be instantiated.
 class ReadForeign a where
   readImpl :: Foreign -> F a
 
@@ -52,34 +57,37 @@ instance readNullOrUndefined :: ReadForeign a => ReadForeign (NullOrUndefined a)
 
 instance readRecord ::
   ( RowToList fields fieldList
-  , ReadForeignFields fieldList
+  , ReadForeignFields fieldList fields
   , ListToRow fieldList fields
   ) => ReadForeign (Record fields) where
-  readImpl = unsafeCoerce $ getFields (Proxy :: Proxy (Record fields))
+  readImpl = getFields (RLProxy :: RLProxy fieldList) (RProxy :: RProxy fields)
 
 -- | A class for reading foreign values from properties. Warning: This class should not be instantiated.
-class ReadForeignFields (xs :: RowList) where
-  getFields :: forall fields
-    .  RowToList fields xs
-    => ListToRow xs fields
-    => Proxy (Record fields)
+class ReadForeignFields (xs :: RowList) (row :: # Type) where
+  getFields :: RLProxy xs
+    -> RProxy row
     -> Foreign
-    -> F (StrMap Foreign)
+    -> F (Record row)
 
 instance readFieldsCons ::
   ( IsSymbol name
   , ReadForeign ty
-  , ListToRow tail tailRow
-  , ReadForeignFields tail
-  , RowToList tailRow tail
-  ) => ReadForeignFields (Cons name ty tail) where
-  getFields _ obj = do
-    field <- readProp name obj
-    first :: ty <- readImpl field
-    rest <- getFields (Proxy :: Proxy (Record tailRow)) obj
-    pure $ union (singleton name field) rest
+  , ReadForeignFields tail tailRow
+  , RowLacks name tailRow
+  , RowCons name ty tailRow row
+  ) => ReadForeignFields (Cons name ty tail) row where
+  getFields _ _ obj = do
+    value <- readImpl =<< readProp name obj
+    rest <- getFields tailP tailRowP obj
+    pure $ insert nameP value rest
     where
-      name = reflectSymbol (SProxy :: SProxy name)
+      nameP = SProxy :: SProxy name
+      tailP = RLProxy :: RLProxy tail
+      tailRowP = RProxy :: RProxy tailRow
+      name = reflectSymbol nameP
 
-instance readFieldsNil :: ReadForeignFields Nil where
-  getFields _ _ = pure empty
+instance readFieldsNil ::
+  ( TypeEquals {} (Record row)
+  ) => ReadForeignFields Nil row where
+  getFields _ _ _ =
+    pure $ to {}
