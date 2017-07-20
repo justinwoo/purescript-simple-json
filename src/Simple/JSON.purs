@@ -9,8 +9,7 @@ import Data.Foreign.NullOrUndefined (NullOrUndefined, readNullOrUndefined)
 import Data.StrMap (StrMap, empty, singleton, union)
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
 import Data.Traversable (sequence)
-import Type.Proxy (Proxy(..))
-import Type.Row (class ListToRow, class RowToList, Cons, Nil, kind RowList)
+import Type.Row (class ListToRow, class RowToList, Cons, Nil, RLProxy(RLProxy), kind RowList)
 import Unsafe.Coerce (unsafeCoerce)
 
 -- | Read a JSON string to a type `a` using `F a`. Useful with record types.
@@ -20,7 +19,13 @@ readJSON :: forall a
   -> F a
 readJSON = readImpl <=< parseJSON
 
--- | A class for reading foreign values to a type. Warning: This class should not be instantiated. 
+read :: forall a
+  .  ReadForeign a
+  => Foreign
+  -> F a
+read = readImpl
+
+-- | A class for reading foreign values to a type. Warning: This class should not be instantiated.
 class ReadForeign a where
   readImpl :: Foreign -> F a
 
@@ -55,28 +60,24 @@ instance readRecord ::
   , ReadForeignFields fieldList
   , ListToRow fieldList fields
   ) => ReadForeign (Record fields) where
-  readImpl = unsafeCoerce $ getFields (Proxy :: Proxy (Record fields))
+  readImpl = unsafeCoerce $ getFields (RLProxy :: RLProxy fieldList)
 
 -- | A class for reading foreign values from properties. Warning: This class should not be instantiated.
 class ReadForeignFields (xs :: RowList) where
-  getFields :: forall fields
-    .  RowToList fields xs
-    => ListToRow xs fields
-    => Proxy (Record fields)
+  getFields ::
+    RLProxy xs
     -> Foreign
     -> F (StrMap Foreign)
 
 instance readFieldsCons ::
   ( IsSymbol name
   , ReadForeign ty
-  , ListToRow tail tailRow
   , ReadForeignFields tail
-  , RowToList tailRow tail
   ) => ReadForeignFields (Cons name ty tail) where
   getFields _ obj = do
     field <- readProp name obj
     first :: ty <- readImpl field
-    rest <- getFields (Proxy :: Proxy (Record tailRow)) obj
+    rest <- getFields (RLProxy :: RLProxy tail) obj
     pure $ union (singleton name field) rest
     where
       name = reflectSymbol (SProxy :: SProxy name)
