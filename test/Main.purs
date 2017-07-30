@@ -7,6 +7,7 @@ import Control.Monad.Except (runExcept)
 import Data.Either (Either, isRight)
 import Data.Foreign (MultipleErrors)
 import Data.Foreign.NullOrUndefined (NullOrUndefined)
+import Data.StrMap (StrMap)
 import Simple.JSON (class ReadForeign, readJSON)
 import Test.Spec (describe, it)
 import Test.Spec.Assertions (shouldEqual)
@@ -33,6 +34,10 @@ type MyTestNull =
   , e :: NullOrUndefined (Array String)
   }
 
+type MyTestStrMap =
+  { a :: Int
+  , b :: StrMap Int
+  }
 
 main :: Eff (RunnerEffects ()) Unit
 main = run [consoleReporter] do
@@ -57,3 +62,8 @@ main = run [consoleReporter] do
         { "a": 1, "b": "asdf", "c": true, "d": ["A", "B"], "e": ["C", "D"]}
       """
       isRight (result :: E MyTestNull) `shouldEqual` true
+    it "works with JSON containing StrMap field" do
+      let result = handleJSON """
+        { "a": 1, "b": {"asdf": 1, "c": 2} }
+      """
+      isRight (result :: E MyTestStrMap) `shouldEqual` true

@@ -7,8 +7,10 @@ import Data.Foreign.Index (readProp)
 import Data.Foreign.JSON (parseJSON)
 import Data.Foreign.NullOrUndefined (NullOrUndefined, readNullOrUndefined)
 import Data.Record (insert)
+import Data.StrMap as StrMap
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
 import Data.Traversable (sequence)
+import Simple.Internal (readStrMap)
 import Type.Equality (class TypeEquals, to)
 import Type.Row (class ListToRow, class RowLacks, class RowToList, Cons, Nil, RLProxy(RLProxy), RProxy(..), kind RowList)
 
@@ -54,6 +56,9 @@ instance readArray :: ReadForeign a => ReadForeign (Array a) where
 
 instance readNullOrUndefined :: ReadForeign a => ReadForeign (NullOrUndefined a) where
   readImpl = readNullOrUndefined readImpl
+
+instance readStrMap :: ReadForeign a => ReadForeign (StrMap.StrMap a) where
+  readImpl = sequence <<< StrMap.mapWithKey (\_ -> readImpl) <=< readStrMap
 
 instance readRecord ::
   ( RowToList fields fieldList
