@@ -2,14 +2,21 @@ module Simple.JSON where
 
 import Prelude
 
-import Data.Foreign (F, Foreign, readArray, readBoolean, readChar, readInt, readNumber, readString)
+import Data.Bitraversable (ltraverse)
+import Data.Foreign (F, Foreign, ForeignError(..), fail, readArray, readBoolean, readChar, readInt, readNumber, readString)
 import Data.Foreign.Index (readProp)
 import Data.Foreign.JSON (parseJSON)
 import Data.Foreign.NullOrUndefined (NullOrUndefined, readNullOrUndefined)
+import Data.Int (fromString)
+import Data.Map as Map
+import Data.Maybe (Maybe(..))
 import Data.Record (insert)
 import Data.StrMap as StrMap
+import Data.String as S
+import Data.String.Unsafe (char)
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
-import Data.Traversable (sequence)
+import Data.Traversable (sequence, traverse)
+import Data.Tuple (Tuple)
 import Simple.Internal (readStrMap)
 import Type.Equality (class TypeEquals, to)
 import Type.Row (class ListToRow, class RowLacks, class RowToList, Cons, Nil, RLProxy(RLProxy), RProxy(..), kind RowList)
@@ -96,3 +103,33 @@ instance readFieldsNil ::
   ) => ReadForeignFields Nil row where
   getFields _ _ _ =
     pure $ to {}
+
+
+-- | The purpose of the `ReadKey` class is to turn strings into map keys,
+-- | so we can read generic `Map`s from `StrMap`s.
+class ReadKey a where
+  readKey :: String -> F a
+
+instance stringReadKey :: ReadKey String where
+  readKey = pure <<< id
+  
+instance charReadKey :: ReadKey Char where
+  readKey s = case S.length s of
+    1 -> pure $ char s
+    _ -> fail $ ForeignError $ "invalid char key:" <> show s
+    
+instance booleanReadKey :: ReadKey Boolean where
+  readKey "true" = pure true
+  readKey "false" = pure false
+  readKey s = fail $ ForeignError $ "invalid boolean key:" <> show s
+  
+instance readKeyInt :: ReadKey Int where
+  readKey s = case fromString s of
+    Nothing -> fail $ ForeignError $ "invalid key:" <> show s
+    Just n -> pure n
+
+instance readMap :: (ReadKey k, ReadForeign v, Ord k) => ReadForeign (Map.Map k v) where
+  readImpl = pure <<< Map.fromFoldable <=< readKeys <<< StrMap.toUnfoldable <=< readImpl
+    where
+      readKeys :: Array (Tuple String v) -> F (Array (Tuple k v))
+      readKeys = traverse $ ltraverse readKey 
