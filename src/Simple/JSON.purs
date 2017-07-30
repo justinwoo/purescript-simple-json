@@ -25,7 +25,7 @@ read :: forall a
   -> F a
 read = readImpl
 
--- | A class for reading foreign values to a type. Warning: This class should not be instantiated.
+-- | A class for reading foreign values to a type
 class ReadForeign a where
   readImpl :: Foreign -> F a
 
@@ -62,7 +62,7 @@ instance readRecord ::
   ) => ReadForeign (Record fields) where
   readImpl = getFields (RLProxy :: RLProxy fieldList) (RProxy :: RProxy fields)
 
--- | A class for reading foreign values from properties. Warning: This class should not be instantiated.
+-- | A class for reading foreign values from properties
 class ReadForeignFields (xs :: RowList) (row :: # Type) where
   getFields :: RLProxy xs
     -> RProxy row
