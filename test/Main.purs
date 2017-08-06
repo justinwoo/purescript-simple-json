@@ -7,6 +7,7 @@ import Control.Monad.Except (runExcept)
 import Data.Either (Either, isRight)
 import Data.Foreign (MultipleErrors)
 import Data.Foreign.NullOrUndefined (NullOrUndefined)
+import Data.Map (Map)
 import Data.StrMap (StrMap)
 import Simple.JSON (class ReadForeign, readJSON)
 import Test.Spec (describe, it)
@@ -39,6 +40,11 @@ type MyTestStrMap =
   , b :: StrMap Int
   }
 
+type MyTestMap =
+  { a :: Int
+  , b :: Map Int String
+  }
+
 main :: Eff (RunnerEffects ()) Unit
 main = run [consoleReporter] do
   describe "readJSON" do
@@ -67,3 +73,8 @@ main = run [consoleReporter] do
         { "a": 1, "b": {"asdf": 1, "c": 2} }
       """
       isRight (result :: E MyTestStrMap) `shouldEqual` true
+    it "works with JSON containing Map field" do
+      let result = handleJSON """
+        { "a": 1, "b": {"1": "one", "2": "two"} }
+      """
+      isRight (result :: E MyTestMap) `shouldEqual` true
