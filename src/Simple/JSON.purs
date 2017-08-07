@@ -4,13 +4,13 @@ import Prelude
 
 import Data.Foreign (F, Foreign, readArray, readBoolean, readChar, readInt, readNumber, readString)
 import Data.Foreign.Index (readProp)
+import Data.Foreign.Internal (readStrMap)
 import Data.Foreign.JSON (parseJSON)
 import Data.Foreign.NullOrUndefined (NullOrUndefined, readNullOrUndefined)
 import Data.Record (insert)
 import Data.StrMap as StrMap
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
 import Data.Traversable (sequence)
-import Simple.Internal (readStrMap)
 import Type.Equality (class TypeEquals, to)
 import Type.Row (class ListToRow, class RowLacks, class RowToList, Cons, Nil, RLProxy(RLProxy), RProxy(..), kind RowList)
 
