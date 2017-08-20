@@ -4,15 +4,18 @@ import Prelude
 
 import Control.Monad.Eff (Eff)
 import Control.Monad.Except (runExcept)
-import Data.Either (Either, isRight)
+import Data.Either (Either(..), isRight)
 import Data.Foreign (MultipleErrors)
-import Data.Foreign.NullOrUndefined (NullOrUndefined)
+import Data.Foreign.NullOrUndefined (NullOrUndefined(..))
+import Data.Maybe (Maybe(..))
 import Data.StrMap (StrMap)
-import Simple.JSON (class ReadForeign, readJSON)
-import Test.Spec (describe, it)
-import Test.Spec.Assertions (shouldEqual)
+import Global.Unsafe (unsafeStringify)
+import Simple.JSON (class ReadForeign, readJSON, writeJSON)
+import Test.Spec (describe, it, pending)
+import Test.Spec.Assertions (fail, shouldEqual)
 import Test.Spec.Reporter (consoleReporter)
 import Test.Spec.Runner (RunnerEffects, run)
+import Test.Util (equal)
 
 type E a = Either MultipleErrors a
 
@@ -67,3 +70,14 @@ main = run [consoleReporter] do
         { "a": 1, "b": {"asdf": 1, "c": 2} }
       """
       isRight (result :: E MyTestStrMap) `shouldEqual` true
+  describe "writeJSON" do
+    let
+      original = { "a": 1, "b": "asdf", "c": true, "d": ["A", "B"], "e": NullOrUndefined (Just ["C", "D"])} :: MyTestNull
+      json = writeJSON original
+    it "works with normal types" do
+      case handleJSON json of
+        Right (a :: MyTestNull) -> equal a original `shouldEqual` true
+        Left e -> fail $ show e
+    pending $ "orig: " <> unsafeStringify original
+    pending $ "json: " <> json
+
