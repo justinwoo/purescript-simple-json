@@ -2,6 +2,8 @@ module Test.Main where
 
 import Prelude
 
+import Data.Argonaut.Core (Json)
+import Data.Argonaut.Parser (jsonParser)
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Except (runExcept)
@@ -44,14 +46,19 @@ type MyTestStrMap =
 main :: Eff (RunnerEffects ()) Unit
 main = run [consoleReporter] do
   let roundtrips :: forall a. ReadForeign a => WriteForeign a => Proxy a -> String -> Aff (RunnerEffects ()) Unit
-      roundtrips _ json = do
+      roundtrips _ enc0 = do
         let dec0 :: E a
-            dec0 = handleJSON json
+            dec0 = handleJSON enc0
             enc1 = either (const "bad1") writeJSON dec0
+            json0 :: Either String Json
+            json0 = jsonParser enc0
+            json1 :: Either String Json
+            json1 = jsonParser enc1
             dec1 :: E a
             dec1 = handleJSON enc1
             enc2 = either (const "bad2") writeJSON dec1
-        when (enc1 /= enc2) $ fail json
+        when (json0 /= json1) $ fail $ "\n\torig: " <> show json0 <> "\n\tenc: " <> show json1
+        when (enc1 /= enc2) $ fail enc0
   describe "readJSON" do
     it "fails with invalid JSON" do
       let result = handleJSON """

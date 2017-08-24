@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "purescript-console": "^3.0.0",
+    "purescript-argonaut-core": "^3.1.0",
     "purescript-spec": "^1.0.0"
   }
 }
