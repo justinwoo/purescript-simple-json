@@ -73,7 +73,7 @@ instance readNullOrUndefined :: ReadForeign a => ReadForeign (NullOrUndefined a)
   readImpl = readNullOrUndefined readImpl
 
 instance readStrMap :: ReadForeign a => ReadForeign (StrMap.StrMap a) where
-  readImpl = sequence <<< StrMap.mapWithKey (\_ -> readImpl) <=< readStrMap
+  readImpl = sequence <<< StrMap.mapWithKey (const readImpl) <=< readStrMap
 
 instance readRecord ::
   ( RowToList fields fieldList
@@ -113,7 +113,7 @@ instance readFieldsNil ::
     pure $ to {}
 
 -- | A class for writing a value into JSON
--- | need to do this intelligently using Foreign probably, bcause of null and undefine dwhatever
+-- | need to do this intelligently using Foreign probably, because of null and undefined whatever
 class WriteForeign a where
   writeImpl :: a -> Foreign
 
@@ -137,6 +137,9 @@ instance writeForeignArray :: WriteForeign a => WriteForeign (Array a) where
 
 instance writeForeignNullOrUndefined :: WriteForeign a => WriteForeign (NullOrUndefined a) where
   writeImpl (NullOrUndefined a) = maybe undefined writeImpl a
+
+instance writeForeignStrMap :: WriteForeign a => WriteForeign (StrMap.StrMap a) where
+  writeImpl = toForeign <<< StrMap.mapWithKey (const writeImpl)
 
 instance recordWriteForeign ::
   ( RowToList row rl

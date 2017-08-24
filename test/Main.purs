@@ -2,20 +2,21 @@ module Test.Main where
 
 import Prelude
 
+import Data.Argonaut.Core (Json)
+import Data.Argonaut.Parser (jsonParser)
+import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Except (runExcept)
-import Data.Either (Either(..), isRight)
+import Data.Either (Either, either, isRight)
 import Data.Foreign (MultipleErrors)
-import Data.Foreign.NullOrUndefined (NullOrUndefined(..))
-import Data.Maybe (Maybe(..))
+import Data.Foreign.NullOrUndefined (NullOrUndefined)
 import Data.StrMap (StrMap)
-import Global.Unsafe (unsafeStringify)
-import Simple.JSON (class ReadForeign, readJSON, writeJSON)
-import Test.Spec (describe, it, pending)
+import Simple.JSON (class ReadForeign, class WriteForeign, readJSON, writeJSON)
+import Test.Spec (describe, it)
 import Test.Spec.Assertions (fail, shouldEqual)
 import Test.Spec.Reporter (consoleReporter)
 import Test.Spec.Runner (RunnerEffects, run)
-import Test.Util (equal)
+import Type.Proxy (Proxy(..))
 
 type E a = Either MultipleErrors a
 
@@ -42,42 +43,39 @@ type MyTestStrMap =
   , b :: StrMap Int
   }
 
+roundtrips :: forall a. ReadForeign a => WriteForeign a => Proxy a -> String -> Aff (RunnerEffects ()) Unit
+roundtrips _ enc0 = do
+  let dec0 :: E a
+      dec0 = handleJSON enc0
+      enc1 = either (const "bad1") writeJSON dec0
+      json0 :: Either String Json
+      json0 = jsonParser enc0
+      json1 :: Either String Json
+      json1 = jsonParser enc1
+      dec1 :: E a
+      dec1 = handleJSON enc1
+      enc2 = either (const "bad2") writeJSON dec1
+  when (json0 /= json1) $ fail $ "\n\torig: " <> show json0 <> "\n\tenc: " <> show json1
+  when (enc1 /= enc2) $ fail enc0
+
 main :: Eff (RunnerEffects ()) Unit
 main = run [consoleReporter] do
   describe "readJSON" do
-    it "works with proper JSON" do
-      let result = handleJSON """
-        { "a": 1, "b": "asdf", "c": true, "d": ["A", "B"]}
-      """
-      isRight (result :: E MyTest) `shouldEqual` true
     it "fails with invalid JSON" do
       let result = handleJSON """
         { "c": 1, "d": 2}
       """
       isRight (result :: E MyTest) `shouldEqual` false
-    it "works with JSON lacking NullOrUndefined field" do
-      let result = handleJSON """
+  describe "roundtrips" do
+    it "works with proper JSON" $ roundtrips (Proxy :: Proxy MyTest) """
         { "a": 1, "b": "asdf", "c": true, "d": ["A", "B"]}
       """
-      isRight (result :: E MyTestNull) `shouldEqual` true
-    it "works with JSON containing NullOrUndefined field" do
-      let result = handleJSON """
+    it "works with JSON lacking NullOrUndefined field" $ roundtrips (Proxy :: Proxy MyTest) """
+        { "a": 1, "b": "asdf", "c": true, "d": ["A", "B"]}
+      """
+    it "works with JSON containing NullOrUndefined field" $ roundtrips (Proxy :: Proxy MyTestNull) """
         { "a": 1, "b": "asdf", "c": true, "d": ["A", "B"], "e": ["C", "D"]}
       """
-      isRight (result :: E MyTestNull) `shouldEqual` true
-    it "works with JSON containing StrMap field" do
-      let result = handleJSON """
+    it "works with JSON containing StrMap field" $ roundtrips (Proxy :: Proxy MyTestStrMap) """
         { "a": 1, "b": {"asdf": 1, "c": 2} }
       """
-      isRight (result :: E MyTestStrMap) `shouldEqual` true
-  describe "writeJSON" do
-    let
-      original = { "a": 1, "b": "asdf", "c": true, "d": ["A", "B"], "e": NullOrUndefined (Just ["C", "D"])} :: MyTestNull
-      json = writeJSON original
-    it "works with normal types" do
-      case handleJSON json of
-        Right (a :: MyTestNull) -> equal a original `shouldEqual` true
-        Left e -> fail $ show e
-    pending $ "orig: " <> unsafeStringify original
-    pending $ "json: " <> json
-
