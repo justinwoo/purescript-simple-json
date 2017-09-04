@@ -70,7 +70,7 @@ main = run [consoleReporter] do
     it "works with proper JSON" $ roundtrips (Proxy :: Proxy MyTest) """
         { "a": 1, "b": "asdf", "c": true, "d": ["A", "B"]}
       """
-    it "works with JSON lacking NullOrUndefined field" $ roundtrips (Proxy :: Proxy MyTest) """
+    it "works with JSON lacking NullOrUndefined field" $ roundtrips (Proxy :: Proxy MyTestNull) """
         { "a": 1, "b": "asdf", "c": true, "d": ["A", "B"]}
       """
     it "works with JSON containing NullOrUndefined field" $ roundtrips (Proxy :: Proxy MyTestNull) """
