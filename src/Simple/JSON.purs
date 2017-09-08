@@ -117,10 +117,13 @@ instance readFieldsNil ::
 class WriteForeign a where
   writeImpl :: a -> Foreign
 
-instance writeForeignInt :: WriteForeign String where
+instance writeForeignForeign :: WriteForeign Foreign where
+  writeImpl = id
+
+instance writeForeignString :: WriteForeign String where
   writeImpl = toForeign
 
-instance writeForeignString :: WriteForeign Int where
+instance writeForeignInt :: WriteForeign Int where
   writeImpl = toForeign
 
 instance writeForeignChar :: WriteForeign Char where
