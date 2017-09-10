@@ -2,7 +2,8 @@ module Simple.JSON where
 
 import Prelude
 
-import Data.Foreign (F, Foreign, readArray, readBoolean, readChar, readInt, readNumber, readString, toForeign)
+import Control.Monad.Except (withExcept)
+import Data.Foreign (F, Foreign, ForeignError(..), readArray, readBoolean, readChar, readInt, readNumber, readString, toForeign)
 import Data.Foreign.Index (readProp)
 import Data.Foreign.Internal (readStrMap)
 import Data.Foreign.JSON (parseJSON)
@@ -97,7 +98,7 @@ instance readFieldsCons ::
   , RowCons name ty tailRow row
   ) => ReadForeignFields (Cons name ty tail) row where
   getFields _ _ obj = do
-    value <- readImpl =<< readProp name obj
+    value <- withExcept' $ readImpl =<< readProp name obj
     rest <- getFields tailP tailRowP obj
     pure $ insert nameP value rest
     where
@@ -105,6 +106,7 @@ instance readFieldsCons ::
       tailP = RLProxy :: RLProxy tail
       tailRowP = RProxy :: RProxy tailRow
       name = reflectSymbol nameP
+      withExcept' = withExcept <<< map $ ErrorAtProperty name
 
 instance readFieldsNil ::
   ( TypeEquals {} (Record row)

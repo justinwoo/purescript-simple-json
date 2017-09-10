@@ -2,15 +2,19 @@ module Test.Main where
 
 import Prelude
 
-import Data.Argonaut.Core (Json)
-import Data.Argonaut.Parser (jsonParser)
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Except (runExcept)
-import Data.Either (Either, either, isRight)
-import Data.Foreign (MultipleErrors)
+import Data.Argonaut.Core (Json)
+import Data.Argonaut.Parser (jsonParser)
+import Data.Either (Either, either, fromLeft, isRight)
+import Data.Foreign (ForeignError(..), MultipleErrors)
 import Data.Foreign.NullOrUndefined (NullOrUndefined)
+import Data.List (List(..))
+import Data.List.NonEmpty (NonEmptyList(..))
+import Data.NonEmpty (NonEmpty(..))
 import Data.StrMap (StrMap)
+import Partial.Unsafe (unsafePartial)
 import Simple.JSON (class ReadForeign, class WriteForeign, readJSON, writeJSON)
 import Test.Spec (describe, it)
 import Test.Spec.Assertions (fail, shouldEqual)
@@ -65,6 +69,8 @@ main = run [consoleReporter] do
       let result = handleJSON """
         { "c": 1, "d": 2}
       """
+      (unsafePartial $ fromLeft result) `shouldEqual`
+        (NonEmptyList (NonEmpty (ErrorAtProperty "a" (TypeMismatch "Int" "Undefined")) Nil))
       isRight (result :: E MyTest) `shouldEqual` false
   describe "roundtrips" do
     it "works with proper JSON" $ roundtrips (Proxy :: Proxy MyTest) """
