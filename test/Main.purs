@@ -69,8 +69,8 @@ type MyTestManyMaybe =
 roundtrips :: forall a. ReadForeign a => WriteForeign a => Proxy a -> String -> Aff (RunnerEffects ()) Unit
 roundtrips _ enc0 = do
   let dec0 :: E a
-      dec0 = handleJSON $ enc0
-      enc1 = either (const "bad1") writeJSON $ dec0
+      dec0 = handleJSON enc0
+      enc1 = either (const "bad1") writeJSON dec0
       json0 :: Either String Json
       json0 = jsonParser enc0
       json1 :: Either String Json
