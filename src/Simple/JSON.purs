@@ -1,4 +1,22 @@
-module Simple.JSON where
+module Simple.JSON (
+  readJSON
+, writeJSON
+, write
+, read
+
+, class ReadForeign
+, readImpl
+
+, class ReadForeignFields
+, getFields
+
+, class WriteForeign
+, writeImpl
+
+, class WriteForeignFields
+, writeImplFields
+
+) where
 
 import Prelude
 
@@ -7,8 +25,9 @@ import Data.Foreign (F, Foreign, ForeignError(..), readArray, readBoolean, readC
 import Data.Foreign.Index (readProp)
 import Data.Foreign.Internal (readStrMap)
 import Data.Foreign.JSON (parseJSON)
-import Data.Foreign.NullOrUndefined (NullOrUndefined(NullOrUndefined), readNullOrUndefined, undefined)
-import Data.Maybe (maybe)
+import Data.Foreign.NullOrUndefined (NullOrUndefined(NullOrUndefined), readNullOrUndefined, unNullOrUndefined, undefined)
+import Data.Maybe (Maybe(..), maybe)
+import Data.Nullable (toNullable)
 import Data.Record (get, insert)
 import Data.StrMap as StrMap
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
@@ -72,6 +91,9 @@ instance readArray :: ReadForeign a => ReadForeign (Array a) where
 
 instance readNullOrUndefined :: ReadForeign a => ReadForeign (NullOrUndefined a) where
   readImpl = readNullOrUndefined readImpl
+
+instance readMaybe :: ReadForeign a => ReadForeign (Maybe a) where
+  readImpl = map unNullOrUndefined <<< readImpl
 
 instance readStrMap :: ReadForeign a => ReadForeign (StrMap.StrMap a) where
   readImpl = sequence <<< StrMap.mapWithKey (const readImpl) <=< readStrMap
@@ -142,6 +164,10 @@ instance writeForeignArray :: WriteForeign a => WriteForeign (Array a) where
 
 instance writeForeignNullOrUndefined :: WriteForeign a => WriteForeign (NullOrUndefined a) where
   writeImpl (NullOrUndefined a) = maybe undefined writeImpl a
+
+instance writeForeignMaybe :: WriteForeign a => WriteForeign (Maybe a) where
+  writeImpl (Just a) = writeImpl a
+  writeImpl Nothing = toForeign $ toNullable Nothing 
 
 instance writeForeignStrMap :: WriteForeign a => WriteForeign (StrMap.StrMap a) where
   writeImpl = toForeign <<< StrMap.mapWithKey (const writeImpl)
