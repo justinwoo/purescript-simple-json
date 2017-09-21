@@ -27,6 +27,7 @@ import Data.Foreign.Internal (readStrMap)
 import Data.Foreign.JSON (parseJSON)
 import Data.Foreign.NullOrUndefined (NullOrUndefined(NullOrUndefined), readNullOrUndefined, unNullOrUndefined, undefined)
 import Data.Maybe (Maybe(..), maybe)
+import Data.Nullable (toNullable)
 import Data.Record (get, insert)
 import Data.StrMap as StrMap
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
@@ -166,9 +167,7 @@ instance writeForeignNullOrUndefined :: WriteForeign a => WriteForeign (NullOrUn
 
 instance writeForeignMaybe :: WriteForeign a => WriteForeign (Maybe a) where
   writeImpl (Just a) = writeImpl a
-  writeImpl Nothing = null
-
-foreign import null :: Foreign
+  writeImpl Nothing = toForeign $ toNullable Nothing 
 
 instance writeForeignStrMap :: WriteForeign a => WriteForeign (StrMap.StrMap a) where
   writeImpl = toForeign <<< StrMap.mapWithKey (const writeImpl)
