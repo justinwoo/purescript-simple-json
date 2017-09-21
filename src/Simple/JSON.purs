@@ -22,18 +22,16 @@ import Prelude
 
 import Control.Monad.Except (withExcept)
 import Data.Foreign (F, Foreign, ForeignError(..), readArray, readBoolean, readChar, readInt, readNumber, readString, toForeign)
-import Data.Foreign as Foreign
 import Data.Foreign.Index (readProp)
 import Data.Foreign.Internal (readStrMap)
 import Data.Foreign.JSON (parseJSON)
-import Data.Foreign.NullOrUndefined (NullOrUndefined(NullOrUndefined), readNullOrUndefined, undefined)
+import Data.Foreign.NullOrUndefined (NullOrUndefined(NullOrUndefined), readNullOrUndefined, unNullOrUndefined, undefined)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Record (get, insert)
 import Data.StrMap as StrMap
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
-import Data.Traversable (sequence, traverse)
+import Data.Traversable (sequence)
 import Global.Unsafe (unsafeStringify)
-
 import Type.Prelude (class TypeEquals, to)
 import Type.Row (class ListToRow, class RowLacks, class RowToList, Cons, Nil, RLProxy(RLProxy), RProxy(..), kind RowList)
 
@@ -94,7 +92,7 @@ instance readNullOrUndefined :: ReadForeign a => ReadForeign (NullOrUndefined a)
   readImpl = readNullOrUndefined readImpl
 
 instance readMaybe :: ReadForeign a => ReadForeign (Maybe a) where
-  readImpl foreignValue = (Foreign.readNullOrUndefined foreignValue) >>= (traverse readImpl)
+  readImpl = map unNullOrUndefined <<< readImpl
 
 instance readStrMap :: ReadForeign a => ReadForeign (StrMap.StrMap a) where
   readImpl = sequence <<< StrMap.mapWithKey (const readImpl) <=< readStrMap
