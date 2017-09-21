@@ -28,13 +28,14 @@ import Data.Foreign.JSON (parseJSON)
 import Data.Foreign.NullOrUndefined (NullOrUndefined(NullOrUndefined), readNullOrUndefined, unNullOrUndefined, undefined)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Nullable (toNullable)
-import Data.Record (get, insert)
+import Data.Record (get)
+import Data.Record.Builder (Builder)
+import Data.Record.Builder as Builder
 import Data.StrMap as StrMap
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
 import Data.Traversable (sequence)
 import Global.Unsafe (unsafeStringify)
-import Type.Prelude (class TypeEquals, to)
-import Type.Row (class ListToRow, class RowLacks, class RowToList, Cons, Nil, RLProxy(RLProxy), RProxy(..), kind RowList)
+import Type.Row (class RowLacks, class RowToList, Cons, Nil, RLProxy(RLProxy), kind RowList)
 
 -- | Read a JSON string to a type `a` using `F a`. Useful with record types.
 readJSON :: forall a
@@ -100,41 +101,45 @@ instance readStrMap :: ReadForeign a => ReadForeign (StrMap.StrMap a) where
 
 instance readRecord ::
   ( RowToList fields fieldList
-  , ReadForeignFields fieldList fields
-  , ListToRow fieldList fields
+  , ReadForeignFields fieldList () fields
   ) => ReadForeign (Record fields) where
-  readImpl = getFields (RLProxy :: RLProxy fieldList) (RProxy :: RProxy fields)
+  readImpl o = do
+    steps <- getFields fieldListP o
+    pure $ Builder.build steps {}
+    where
+      fieldListP = RLProxy :: RLProxy fieldList
 
 -- | A class for reading foreign values from properties
-class ReadForeignFields (xs :: RowList) (row :: # Type) where
+class ReadForeignFields (xs :: RowList) (from :: # Type) (to :: # Type)
+  | xs -> from to where
   getFields :: RLProxy xs
-    -> RProxy row
     -> Foreign
-    -> F (Record row)
+    -> F (Builder (Record from) (Record to))
 
 instance readFieldsCons ::
   ( IsSymbol name
   , ReadForeign ty
-  , ReadForeignFields tail tailRow
-  , RowLacks name tailRow
-  , RowCons name ty tailRow row
-  ) => ReadForeignFields (Cons name ty tail) row where
-  getFields _ _ obj = do
-    value <- withExcept' $ readImpl =<< readProp name obj
-    rest <- getFields tailP tailRowP obj
-    pure $ insert nameP value rest
+  , ReadForeignFields tail from from'
+  , RowLacks name from'
+  , RowCons name ty from' to
+  ) => ReadForeignFields (Cons name ty tail) from to where
+  getFields _ obj = do
+    value :: ty <- withExcept' $ readImpl =<< readProp name obj
+    rest <- getFields tailP obj
+    let
+      first :: Builder (Record from') (Record to)
+      first = Builder.insert nameP value
+    pure $ first <<< rest
     where
       nameP = SProxy :: SProxy name
       tailP = RLProxy :: RLProxy tail
-      tailRowP = RProxy :: RProxy tailRow
       name = reflectSymbol nameP
       withExcept' = withExcept <<< map $ ErrorAtProperty name
 
 instance readFieldsNil ::
-  ( TypeEquals {} (Record row)
-  ) => ReadForeignFields Nil row where
-  getFields _ _ _ =
-    pure $ to {}
+  ReadForeignFields Nil () () where
+  getFields _ _ =
+    pure id
 
 -- | A class for writing a value into JSON
 -- | need to do this intelligently using Foreign probably, because of null and undefined whatever
@@ -174,33 +179,33 @@ instance writeForeignStrMap :: WriteForeign a => WriteForeign (StrMap.StrMap a) 
 
 instance recordWriteForeign ::
   ( RowToList row rl
-  , WriteForeignFields rl row row'
+  , WriteForeignFields rl row () to
   ) => WriteForeign (Record row) where
-  writeImpl rec = toForeign $ writeImplFields rlp rec
+  writeImpl rec = toForeign $ Builder.build steps {}
     where
       rlp = RLProxy :: RLProxy rl
+      steps = writeImplFields rlp rec
 
-class WriteForeignFields (rl :: RowList) row (row' :: # Type)
-  | rl -> row row' where
-  writeImplFields :: forall g. g rl -> Record row -> Record row'
+class WriteForeignFields (rl :: RowList) row (from :: # Type) (to :: # Type)
+  | rl -> row from to where
+  writeImplFields :: forall g. g rl -> Record row -> Builder (Record from) (Record to)
 
 instance consWriteForeignFields ::
   ( IsSymbol name
   , WriteForeign ty
-  , WriteForeignFields tail row tailRow
+  , WriteForeignFields tail row from from'
   , RowCons name ty whatever row
-  , RowLacks name tailRow
-  , RowCons name Foreign tailRow row'
-  ) => WriteForeignFields (Cons name ty tail) row row' where
+  , RowLacks name from'
+  , RowCons name Foreign from' to
+  ) => WriteForeignFields (Cons name ty tail) row from to where
   writeImplFields _ rec = result
     where
       namep = SProxy :: SProxy name
       value = writeImpl $ get namep rec
       tailp = RLProxy :: RLProxy tail
       rest = writeImplFields tailp rec
-      result = insert namep value rest
+      result = Builder.insert namep value <<< rest
 
 instance nilWriteForeignFields ::
-  ( TypeEquals {} (Record row')
-  ) => WriteForeignFields Nil row row' where
-  writeImplFields _ _ = to {}
+  WriteForeignFields Nil row () () where
+  writeImplFields _ _ = id
