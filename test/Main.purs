@@ -10,13 +10,11 @@ import Data.Argonaut.Parser (jsonParser)
 import Data.Either (Either(..), either, fromLeft, isRight)
 import Data.Foreign (ForeignError(..), MultipleErrors)
 import Data.Foreign.NullOrUndefined (NullOrUndefined)
-import Data.Generic (class Generic)
 import Data.List (List(..))
 import Data.List.NonEmpty (NonEmptyList(..))
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe)
 import Data.NonEmpty (NonEmpty(..))
 import Data.StrMap (StrMap)
-import Debug.Trace (spy)
 import Partial.Unsafe (unsafePartial)
 import Simple.JSON (class ReadForeign, class WriteForeign, readJSON, writeJSON)
 import Test.Spec (describe, it)
@@ -118,6 +116,6 @@ main = run [consoleReporter] do
     it "works with Maybe field and null value" $ roundtrips (Proxy :: Proxy MyTestMaybe) """
         { "a": null }
       """ 
-    it "works with a several Maybe fields" $ roundtrips (Proxy :: Proxy MyTestManyMaybe) """
+    it "works with many Maybe fields" $ roundtrips (Proxy :: Proxy MyTestManyMaybe) """
       { "a": "str", "aNull": null, "b":1, "bNull": null, "c":true, "cNull":null, "d":1.1, "dNull":null, "e":["str1", "str2", null], "eNull": null }
     """ 
