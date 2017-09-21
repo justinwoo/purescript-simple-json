@@ -36,3 +36,9 @@ type Config =
 getConfig :: IO (F Config)
 getConfig = liftAff $ readJSON <$> readTextFile UTF8 "./config.json"
 ```
+
+## Warning: `Maybe`
+
+This library will decode `undefined` and `null` as `Nothing` and write `Nothing` as `null`. Please use the `NullOrUndefined` type if you'd like to write `undefined` instead. Please take caution when using `Maybe` as this default may not be what you want.
+
+See more here: https://github.com/justinwoo/purescript-simple-json/releases/tag/v0.10.0
