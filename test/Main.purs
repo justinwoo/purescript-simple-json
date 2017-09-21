@@ -16,6 +16,7 @@ import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..))
 import Data.NonEmpty (NonEmpty(..))
 import Data.StrMap (StrMap)
+import Debug.Trace (spy)
 import Partial.Unsafe (unsafePartial)
 import Simple.JSON (class ReadForeign, class WriteForeign, readJSON, writeJSON)
 import Test.Spec (describe, it)
@@ -53,7 +54,7 @@ type MyTestMaybe =
   { a :: Maybe String 
   }
 
-type MyCrazyTestMaybe = 
+type MyTestManyMaybe = 
   { a         :: Maybe String
   , aNull     :: Maybe String 
   , b         :: Maybe Int 
@@ -70,8 +71,8 @@ type MyCrazyTestMaybe =
 roundtrips :: forall a. ReadForeign a => WriteForeign a => Proxy a -> String -> Aff (RunnerEffects ()) Unit
 roundtrips _ enc0 = do
   let dec0 :: E a
-      dec0 = handleJSON enc0
-      enc1 = either (const "bad1") writeJSON dec0
+      dec0 = handleJSON $ enc0
+      enc1 = either (const "bad1") writeJSON $ dec0
       json0 :: Either String Json
       json0 = jsonParser enc0
       json1 :: Either String Json
@@ -92,9 +93,12 @@ main = run [consoleReporter] do
       (unsafePartial $ fromLeft result) `shouldEqual`
         (NonEmptyList (NonEmpty (ErrorAtProperty "a" (TypeMismatch "Int" "Undefined")) Nil))
       isRight (result :: E MyTest) `shouldEqual` false
+    
     it "works with missing Maybe fields by setting them to Nothing" do
       let result = handleJSON "{}"
       (writeJSON <$> (result :: E MyTestMaybe)) `shouldEqual` (Right """{"a":null}""")
+
+
   describe "roundtrips" do
     it "works with proper JSON" $ roundtrips (Proxy :: Proxy MyTest) """
         { "a": 1, "b": "asdf", "c": true, "d": ["A", "B"]}
@@ -113,7 +117,7 @@ main = run [consoleReporter] do
       """
     it "works with Maybe field and null value" $ roundtrips (Proxy :: Proxy MyTestMaybe) """
         { "a": null }
-      """
-    it "works with a bunch of " $ roundtrips (Proxy :: Proxy MyCrazyTestMaybe) """
-      { "a": "str", "aNull": null, "b":1, "bNull": null, "c":true, "cNil":null, "d":1.1, "dNil":null, "e":["str1", "str2", null], "eNil": null }
-    """
+      """ 
+    it "works with a several Maybe fields" $ roundtrips (Proxy :: Proxy MyTestManyMaybe) """
+      { "a": "str", "aNull": null, "b":1, "bNull": null, "c":true, "cNull":null, "d":1.1, "dNull":null, "e":["str1", "str2", null], "eNull": null }
+    """ 
