@@ -7,7 +7,6 @@ module Simple.JSON (
 
 , class ReadForeign
 , readImpl
-
 , class ReadForeignFields
 , getFields
 
@@ -23,19 +22,19 @@ import Prelude
 
 import Control.Monad.Except (runExcept, withExcept)
 import Data.Either (Either)
-import Data.Foreign (F, Foreign, ForeignError(..), MultipleErrors, readArray, readBoolean, readChar, readInt, readNumber, readString, toForeign)
+import Data.Foreign (F, Foreign, ForeignError(..), MultipleErrors, readArray, readBoolean, readChar, readInt, readNull, readNumber, readString, toForeign)
 import Data.Foreign.Index (readProp)
 import Data.Foreign.Internal (readStrMap)
 import Data.Foreign.JSON (parseJSON)
 import Data.Foreign.NullOrUndefined (NullOrUndefined(NullOrUndefined), readNullOrUndefined, unNullOrUndefined, undefined)
 import Data.Maybe (Maybe(..), maybe)
-import Data.Nullable (toNullable)
+import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Record (get)
 import Data.Record.Builder (Builder)
 import Data.Record.Builder as Builder
 import Data.StrMap as StrMap
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
-import Data.Traversable (sequence)
+import Data.Traversable (sequence, traverse)
 import Global.Unsafe (unsafeStringify)
 import Type.Row (class RowLacks, class RowToList, Cons, Nil, RLProxy(RLProxy), kind RowList)
 
@@ -105,6 +104,14 @@ instance readNullOrUndefined :: ReadForeign a => ReadForeign (NullOrUndefined a)
 
 instance readMaybe :: ReadForeign a => ReadForeign (Maybe a) where
   readImpl = map unNullOrUndefined <<< readImpl
+
+instance readNullable :: ReadForeign a => ReadForeign (Nullable a) where
+  readImpl o = withExcept (map reformat) $
+    map toNullable <$> traverse readImpl =<< readNull o
+    where
+      reformat error = case error of
+        TypeMismatch inner other -> TypeMismatch ("Nullable " <> inner) other
+        _ -> error
 
 instance readStrMap :: ReadForeign a => ReadForeign (StrMap.StrMap a) where
   readImpl = sequence <<< StrMap.mapWithKey (const readImpl) <=< readStrMap
@@ -182,7 +189,10 @@ instance writeForeignNullOrUndefined :: WriteForeign a => WriteForeign (NullOrUn
 
 instance writeForeignMaybe :: WriteForeign a => WriteForeign (Maybe a) where
   writeImpl (Just a) = writeImpl a
-  writeImpl Nothing = toForeign $ toNullable Nothing 
+  writeImpl Nothing = toForeign $ toNullable Nothing
+
+instance writeForeignNullable :: WriteForeign a => WriteForeign (Nullable a) where
+  writeImpl = writeImpl <<< toMaybe
 
 instance writeForeignStrMap :: WriteForeign a => WriteForeign (StrMap.StrMap a) where
   writeImpl = toForeign <<< StrMap.mapWithKey (const writeImpl)
@@ -215,7 +225,6 @@ instance consWriteForeignFields ::
       tailp = RLProxy :: RLProxy tail
       rest = writeImplFields tailp rec
       result = Builder.insert namep value <<< rest
-
 instance nilWriteForeignFields ::
   WriteForeignFields Nil row () () where
   writeImplFields _ _ = id
