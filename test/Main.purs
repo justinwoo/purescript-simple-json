@@ -14,6 +14,7 @@ import Data.List (List(..))
 import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe)
 import Data.NonEmpty (NonEmpty(..))
+import Data.Nullable (Nullable)
 import Data.StrMap (StrMap)
 import Partial.Unsafe (unsafePartial)
 import Simple.JSON (class ReadForeign, class WriteForeign, readJSON, writeJSON)
@@ -62,6 +63,11 @@ type MyTestManyMaybe =
   , eNull     :: Maybe (Array (Maybe String))
   }
 
+type MyTestNullable =
+  { a :: Nullable String
+  , b :: Nullable String
+  }
+
 
 roundtrips :: forall a. ReadForeign a => WriteForeign a => Proxy a -> String -> Aff (RunnerEffects ()) Unit
 roundtrips _ enc0 = do
@@ -93,6 +99,13 @@ main = run [consoleReporter] do
       let result = readJSON "{}"
       (writeJSON <$> (result :: E MyTestMaybe)) `shouldEqual` (Right """{"a":null}""")
 
+    it "fails with undefined for null with correct error message" do
+      let result = readJSON """
+        { "a": "asdf" }
+      """
+      (unsafePartial $ fromLeft result) `shouldEqual`
+        (NonEmptyList (NonEmpty (ErrorAtProperty "b" (TypeMismatch "Nullable String" "Undefined")) Nil))
+      isRight (result :: E MyTestNullable) `shouldEqual` false
 
   describe "roundtrips" do
     it "works with proper JSON" $ roundtrips (Proxy :: Proxy MyTest) """
@@ -115,4 +128,7 @@ main = run [consoleReporter] do
       """
     it "works with many Maybe fields" $ roundtrips (Proxy :: Proxy MyTestManyMaybe) """
       { "a": "str", "aNull": null, "b":1, "bNull": null, "c":true, "cNull":null, "d":1.1, "dNull":null, "e":["str1", "str2", null], "eNull": null }
+    """
+    it "works with Nullable" $ roundtrips (Proxy :: Proxy MyTestNullable) """
+      { "a": null, "b": "a" }
     """
