@@ -1,5 +1,6 @@
 module Simple.JSON (
   readJSON
+, readJSON'
 , writeJSON
 , write
 , read
@@ -20,8 +21,9 @@ module Simple.JSON (
 
 import Prelude
 
-import Control.Monad.Except (withExcept)
-import Data.Foreign (F, Foreign, ForeignError(..), readArray, readBoolean, readChar, readInt, readNumber, readString, toForeign)
+import Control.Monad.Except (runExcept, withExcept)
+import Data.Either (Either)
+import Data.Foreign (F, Foreign, ForeignError(..), MultipleErrors, readArray, readBoolean, readChar, readInt, readNumber, readString, toForeign)
 import Data.Foreign.Index (readProp)
 import Data.Foreign.Internal (readStrMap)
 import Data.Foreign.JSON (parseJSON)
@@ -37,12 +39,20 @@ import Data.Traversable (sequence)
 import Global.Unsafe (unsafeStringify)
 import Type.Row (class RowLacks, class RowToList, Cons, Nil, RLProxy(RLProxy), kind RowList)
 
--- | Read a JSON string to a type `a` using `F a`. Useful with record types.
+-- | Read a JSON string to a type `a` while returning a `MultipleErrors` if the
+-- | parsing failed.
 readJSON :: forall a
   .  ReadForeign a
   => String
+  -> Either MultipleErrors a
+readJSON = runExcept <<< (readImpl <=< parseJSON)
+
+-- | Read a JSON string to a type `a` using `F a`. Useful with record types.
+readJSON' :: forall a
+  .  ReadForeign a
+  => String
   -> F a
-readJSON = readImpl <=< parseJSON
+readJSON' = readImpl <=< parseJSON
 
 -- | Write a JSON string from a type `a`.
 writeJSON :: forall a

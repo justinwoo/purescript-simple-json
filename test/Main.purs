@@ -25,9 +25,6 @@ import Type.Proxy (Proxy(..))
 
 type E a = Either MultipleErrors a
 
-handleJSON :: forall a. ReadForeign a => String -> E a
-handleJSON json = runExcept $ readJSON json
-
 type MyTest =
   { a :: Int
   , b :: String
@@ -48,19 +45,19 @@ type MyTestStrMap =
   , b :: StrMap Int
   }
 
-type MyTestMaybe = 
-  { a :: Maybe String 
+type MyTestMaybe =
+  { a :: Maybe String
   }
 
-type MyTestManyMaybe = 
+type MyTestManyMaybe =
   { a         :: Maybe String
-  , aNull     :: Maybe String 
-  , b         :: Maybe Int 
-  , bNull     :: Maybe Int 
-  , c         :: Maybe Boolean 
-  , cNull     :: Maybe Boolean 
+  , aNull     :: Maybe String
+  , b         :: Maybe Int
+  , bNull     :: Maybe Int
+  , c         :: Maybe Boolean
+  , cNull     :: Maybe Boolean
   , d         :: Maybe Number
-  , dNull     :: Maybe Number 
+  , dNull     :: Maybe Number
   , e         :: Maybe (Array (Maybe String))
   , eNull     :: Maybe (Array (Maybe String))
   }
@@ -69,14 +66,14 @@ type MyTestManyMaybe =
 roundtrips :: forall a. ReadForeign a => WriteForeign a => Proxy a -> String -> Aff (RunnerEffects ()) Unit
 roundtrips _ enc0 = do
   let dec0 :: E a
-      dec0 = handleJSON enc0
+      dec0 = readJSON enc0
       enc1 = either (const "bad1") writeJSON dec0
       json0 :: Either String Json
       json0 = jsonParser enc0
       json1 :: Either String Json
       json1 = jsonParser enc1
       dec1 :: E a
-      dec1 = handleJSON enc1
+      dec1 = readJSON enc1
       enc2 = either (const "bad2") writeJSON dec1
   when (json0 /= json1) $ fail $ "\n\torig: " <> show json0 <> "\n\tenc: " <> show json1
   when (enc1 /= enc2) $ fail enc0
@@ -85,15 +82,15 @@ main :: Eff (RunnerEffects ()) Unit
 main = run [consoleReporter] do
   describe "readJSON" do
     it "fails with invalid JSON" do
-      let result = handleJSON """
+      let result = readJSON """
         { "c": 1, "d": 2}
       """
       (unsafePartial $ fromLeft result) `shouldEqual`
         (NonEmptyList (NonEmpty (ErrorAtProperty "a" (TypeMismatch "Int" "Undefined")) Nil))
       isRight (result :: E MyTest) `shouldEqual` false
-    
+
     it "works with missing Maybe fields by setting them to Nothing" do
-      let result = handleJSON "{}"
+      let result = readJSON "{}"
       (writeJSON <$> (result :: E MyTestMaybe)) `shouldEqual` (Right """{"a":null}""")
 
 
@@ -115,7 +112,7 @@ main = run [consoleReporter] do
       """
     it "works with Maybe field and null value" $ roundtrips (Proxy :: Proxy MyTestMaybe) """
         { "a": null }
-      """ 
+      """
     it "works with many Maybe fields" $ roundtrips (Proxy :: Proxy MyTestManyMaybe) """
       { "a": "str", "aNull": null, "b":1, "bNull": null, "c":true, "cNull":null, "d":1.1, "dNull":null, "e":["str1", "str2", null], "eNull": null }
-    """ 
+    """
