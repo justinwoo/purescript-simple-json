@@ -110,12 +110,19 @@ main = run [consoleReporter] do
       (unsafePartial $ fromLeft result) `shouldEqual`
         (NonEmptyList (NonEmpty (ErrorAtProperty "b" (TypeMismatch "Nullable String" "Undefined")) Nil))
       isRight (result :: E MyTestNullable) `shouldEqual` false
-    it "fails with invalid Tuple" do
+    it "fails with invalid length Tuple" do
       let result = readJSON """
         { "a": [1, "foo", 4] }
       """
       (unsafePartial $ fromLeft result) `shouldEqual`
         (NonEmptyList (NonEmpty (ErrorAtProperty "a" (TypeMismatch "2 values" "3 values")) Nil))
+      isRight (result :: E MyTestTuple) `shouldEqual` false
+    it "fails with invalid Tuple" do
+      let result = readJSON """
+        { "a": [1, 4] }
+      """
+      (unsafePartial $ fromLeft result) `shouldEqual`
+        (NonEmptyList (NonEmpty (ErrorAtProperty "a" (TypeMismatch "String" "Number")) Nil))
       isRight (result :: E MyTestTuple) `shouldEqual` false
       
 
