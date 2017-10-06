@@ -21,7 +21,7 @@ module Simple.JSON (
 import Prelude
 
 import Control.Monad.Except (runExcept, withExcept)
-import Data.Array (length, unsafeIndex)
+import Data.Array (length)
 import Data.Either (Either)
 import Data.Foreign (F, Foreign, ForeignError(..), MultipleErrors, fail, readArray, readBoolean, readChar, readInt, readNull, readNumber, readString, toForeign)
 import Data.Foreign.Index (readProp)
@@ -38,7 +38,6 @@ import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
 import Data.Traversable (sequence, traverse)
 import Data.Tuple (Tuple(..))
 import Global.Unsafe (unsafeStringify)
-import Partial.Unsafe (unsafePartial)
 import Type.Row (class RowLacks, class RowToList, Cons, Nil, RLProxy(RLProxy), kind RowList)
 
 -- | Read a JSON string to a type `a` while returning a `MultipleErrors` if the
@@ -122,13 +121,12 @@ instance readForeignStrMap :: ReadForeign a => ReadForeign (StrMap.StrMap a) whe
 instance readForeignTuple :: (ReadForeign a, ReadForeign b) => ReadForeign (Tuple a b) where
   readImpl = asTuple <=< readArray
     where asTuple :: Array Foreign -> F (Tuple a b)
-          asTuple arr = case length arr of
-            2 -> do
-              let get a i = unsafePartial $ unsafeIndex a i
-              a <- readImpl $ get arr 0
-              b <- readImpl $ get arr 1
-              pure $ Tuple a b
-            l -> fail $ TypeMismatch "2 values" (show l <> " values")
+          asTuple = case _ of
+            [a, b] -> do
+              ra <- readImpl a
+              rb <- readImpl b
+              pure $ Tuple ra rb
+            l -> fail $ TypeMismatch "2 values" (show (length l) <> " values")
 
 instance readForeignRecord ::
   ( RowToList fields fieldList
