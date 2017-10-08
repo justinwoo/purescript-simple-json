@@ -15,7 +15,8 @@ import Data.Maybe (Maybe)
 import Data.NonEmpty (NonEmpty(..))
 import Data.Nullable (Nullable)
 import Data.StrMap (StrMap)
-import Data.Tuple (Tuple)
+import Data.Tuple (Tuple(..))
+import Data.Tuple.Nested (Tuple3, tuple3)
 import Partial.Unsafe (unsafePartial)
 import Simple.JSON (class ReadForeign, class WriteForeign, readJSON, writeJSON)
 import Test.Spec (describe, it)
@@ -52,6 +53,14 @@ type MyTestMaybe =
 
 type MyTestTuple =
   { a :: Tuple Int String
+  }
+
+type MyTestNestedTuple =
+  { a :: Tuple Int (Tuple String Number)
+  }
+
+type MyTestTuple3 =
+  { a :: Tuple3 Int String Number
   }
 
 type MyTestManyMaybe =
@@ -153,4 +162,10 @@ main = run [consoleReporter] do
     """
     it "works with Tuple" $ roundtrips (Proxy :: Proxy MyTestTuple) """
         { "a": [1, "foo"] }
+      """
+    it "works with nested Tuple" $ roundtrips (Proxy :: Proxy MyTestNestedTuple) """
+        { "a": [1, ["bar", 4.2]] }
+      """
+    it "works with Tuple3" $ roundtrips (Proxy :: Proxy MyTestTuple3) """
+        { "a": [1, ["bar", [4.2, {}]]] }
       """

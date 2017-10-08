@@ -81,6 +81,9 @@ class ReadForeign a where
 instance readForeignForeign :: ReadForeign Foreign where
   readImpl = pure
 
+instance readForeignUnit :: ReadForeign Unit where
+  readImpl = const $ pure unit -- readUnit
+
 instance readForeignChar :: ReadForeign Char where
   readImpl = readChar
 
@@ -178,6 +181,9 @@ class WriteForeign a where
 instance writeForeignForeign :: WriteForeign Foreign where
   writeImpl = id
 
+instance writeForeignUnit :: WriteForeign Unit where
+  writeImpl = toForeign
+
 instance writeForeignString :: WriteForeign String where
   writeImpl = toForeign
 
@@ -210,7 +216,7 @@ instance writeForeignStrMap :: WriteForeign a => WriteForeign (StrMap.StrMap a) 
   writeImpl = toForeign <<< StrMap.mapWithKey (const writeImpl)
 
 instance writeForeignTuple :: (WriteForeign a, WriteForeign b) => WriteForeign (Tuple a b) where
-  writeImpl (Tuple a b) = writeImpl [toForeign a, toForeign b]
+  writeImpl (Tuple a b) = writeImpl [writeImpl a, writeImpl b]
 
 instance recordWriteForeign ::
   ( RowToList row rl
