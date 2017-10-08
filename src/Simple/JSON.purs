@@ -182,7 +182,7 @@ instance writeForeignForeign :: WriteForeign Foreign where
   writeImpl = id
 
 instance writeForeignUnit :: WriteForeign Unit where
-  writeImpl = const $ writeImpl {}
+  writeImpl = toForeign
 
 instance writeForeignString :: WriteForeign String where
   writeImpl = toForeign
