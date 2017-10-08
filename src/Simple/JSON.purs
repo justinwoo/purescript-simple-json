@@ -82,7 +82,7 @@ instance readForeignForeign :: ReadForeign Foreign where
   readImpl = pure
 
 instance readForeignUnit :: ReadForeign Unit where
-  readImpl = const $ pure unit -- readUnit
+  readImpl = const $ pure unit
 
 instance readForeignChar :: ReadForeign Char where
   readImpl = readChar
@@ -182,7 +182,7 @@ instance writeForeignForeign :: WriteForeign Foreign where
   writeImpl = id
 
 instance writeForeignUnit :: WriteForeign Unit where
-  writeImpl = toForeign
+  writeImpl = const $ writeImpl {}
 
 instance writeForeignString :: WriteForeign String where
   writeImpl = toForeign
