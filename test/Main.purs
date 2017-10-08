@@ -167,5 +167,5 @@ main = run [consoleReporter] do
         { "a": [1, ["bar", 4.2]] }
       """
     it "works with Tuple3" $ roundtrips (Proxy :: Proxy MyTestTuple3) """
-        { "a": [1, ["bar", [4.2, {}]]] }
+        { "a": [1, ["bar", [4.2]]] }
       """

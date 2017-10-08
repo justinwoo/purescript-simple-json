@@ -81,9 +81,6 @@ class ReadForeign a where
 instance readForeignForeign :: ReadForeign Foreign where
   readImpl = pure
 
-instance readForeignUnit :: ReadForeign Unit where
-  readImpl = const $ pure unit
-
 instance readForeignChar :: ReadForeign Char where
   readImpl = readChar
 
@@ -121,7 +118,16 @@ instance readForeignNullable :: ReadForeign a => ReadForeign (Nullable a) where
 instance readForeignStrMap :: ReadForeign a => ReadForeign (StrMap.StrMap a) where
   readImpl = sequence <<< StrMap.mapWithKey (const readImpl) <=< readStrMap
 
-instance readForeignTuple :: (ReadForeign a, ReadForeign b) => ReadForeign (Tuple a b) where
+instance readForeignTupleA :: ReadForeign a => ReadForeign (Tuple a Unit) where
+  readImpl = asTuple <=< readArray
+    where asTuple :: Array Foreign -> F (Tuple a Unit)
+          asTuple = case _ of
+            [a] -> do
+              ra <- readImpl a
+              pure $ Tuple ra unit
+            l -> fail $ TypeMismatch "1 value" (show (length l) <> " values")
+
+instance readForeignTupleZ :: (ReadForeign a, ReadForeign b) => ReadForeign (Tuple a b) where
   readImpl = asTuple <=< readArray
     where asTuple :: Array Foreign -> F (Tuple a b)
           asTuple = case _ of
@@ -181,9 +187,6 @@ class WriteForeign a where
 instance writeForeignForeign :: WriteForeign Foreign where
   writeImpl = id
 
-instance writeForeignUnit :: WriteForeign Unit where
-  writeImpl = toForeign
-
 instance writeForeignString :: WriteForeign String where
   writeImpl = toForeign
 
@@ -215,7 +218,10 @@ instance writeForeignNullable :: WriteForeign a => WriteForeign (Nullable a) whe
 instance writeForeignStrMap :: WriteForeign a => WriteForeign (StrMap.StrMap a) where
   writeImpl = toForeign <<< StrMap.mapWithKey (const writeImpl)
 
-instance writeForeignTuple :: (WriteForeign a, WriteForeign b) => WriteForeign (Tuple a b) where
+instance writeForeignTupleA :: WriteForeign a => WriteForeign (Tuple a Unit) where
+  writeImpl (Tuple a _) = writeImpl [writeImpl a]
+
+instance writeForeignTupleZ :: (WriteForeign a, WriteForeign b) => WriteForeign (Tuple a b) where
   writeImpl (Tuple a b) = writeImpl [writeImpl a, writeImpl b]
 
 instance recordWriteForeign ::
