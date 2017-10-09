@@ -16,7 +16,6 @@ import Data.NonEmpty (NonEmpty(..))
 import Data.Nullable (Nullable)
 import Data.StrMap (StrMap)
 import Data.Tuple (Tuple)
-import Data.Tuple.Nested (Tuple3)
 import Partial.Unsafe (unsafePartial)
 import Simple.JSON (class ReadForeign, class WriteForeign, readJSON, writeJSON)
 import Test.Spec (describe, it)
@@ -52,16 +51,13 @@ type MyTestMaybe =
   }
 
 type MyTestTuple =
-  { a :: Tuple Int String
-  }
+  Tuple Int String
 
-type MyTestNestedTuple =
-  { a :: Tuple Int (Tuple String Number)
-  }
+type MyTestNestedTupleR =
+  Tuple Int (Tuple String Number)
 
-type MyTestTuple3 =
-  { a :: Tuple3 Int String Number
-  }
+type MyTestNestedTupleL =
+  Tuple (Tuple String Number) Int
 
 type MyTestManyMaybe =
   { a         :: Maybe String
@@ -121,17 +117,17 @@ main = run [consoleReporter] do
       isRight (result :: E MyTestNullable) `shouldEqual` false
     it "fails with invalid length Tuple" do
       let result = readJSON """
-        { "a": [1, "foo", 4] }
+        [1, "foo", 4]
       """
       (unsafePartial $ fromLeft result) `shouldEqual`
-        (NonEmptyList (NonEmpty (ErrorAtProperty "a" (TypeMismatch "2 values" "3 values")) Nil))
+        (NonEmptyList (NonEmpty (TypeMismatch "2 values" "3 values") Nil))
       isRight (result :: E MyTestTuple) `shouldEqual` false
     it "fails with invalid Tuple" do
       let result = readJSON """
-        { "a": [1, 4] }
+        [1, 4]
       """
       (unsafePartial $ fromLeft result) `shouldEqual`
-        (NonEmptyList (NonEmpty (ErrorAtProperty "a" (TypeMismatch "String" "Number")) Nil))
+        (NonEmptyList (NonEmpty (TypeMismatch "String" "Number") Nil))
       isRight (result :: E MyTestTuple) `shouldEqual` false
       
 
@@ -161,11 +157,11 @@ main = run [consoleReporter] do
       { "a": null, "b": "a" }
     """
     it "works with Tuple" $ roundtrips (Proxy :: Proxy MyTestTuple) """
-        { "a": [1, "foo"] }
+        [1, "foo"]
       """
-    it "works with nested Tuple" $ roundtrips (Proxy :: Proxy MyTestNestedTuple) """
-        { "a": [1, ["bar", 4.2]] }
+    it "works with right-nested Tuple" $ roundtrips (Proxy :: Proxy MyTestNestedTupleR) """
+        [1, ["bar", 4.2]]
       """
-    it "works with Tuple3" $ roundtrips (Proxy :: Proxy MyTestTuple3) """
-        { "a": [1, ["bar", [4.2]]] }
+    it "works with left-nested Tuple" $ roundtrips (Proxy :: Proxy MyTestNestedTupleL) """
+        [["bar", 4.2], 1]
       """
