@@ -21,8 +21,9 @@ module Simple.JSON (
 import Prelude
 
 import Control.Monad.Except (runExcept, withExcept)
+import Data.Array (length)
 import Data.Either (Either)
-import Data.Foreign (F, Foreign, ForeignError(..), MultipleErrors, readArray, readBoolean, readChar, readInt, readNull, readNumber, readString, toForeign)
+import Data.Foreign (F, Foreign, ForeignError(..), MultipleErrors, fail, readArray, readBoolean, readChar, readInt, readNull, readNumber, readString, toForeign)
 import Data.Foreign.Index (readProp)
 import Data.Foreign.Internal (readStrMap)
 import Data.Foreign.JSON (parseJSON)
@@ -35,6 +36,7 @@ import Data.Record.Builder as Builder
 import Data.StrMap as StrMap
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
 import Data.Traversable (sequence, traverse)
+import Data.Tuple (Tuple(..))
 import Global.Unsafe (unsafeStringify)
 import Type.Row (class RowLacks, class RowToList, Cons, Nil, RLProxy(RLProxy), kind RowList)
 
@@ -76,36 +78,36 @@ read = readImpl
 class ReadForeign a where
   readImpl :: Foreign -> F a
 
-instance readForeign :: ReadForeign Foreign where
+instance readForeignForeign :: ReadForeign Foreign where
   readImpl = pure
 
-instance readChar :: ReadForeign Char where
+instance readForeignChar :: ReadForeign Char where
   readImpl = readChar
 
-instance readNumber :: ReadForeign Number where
+instance readForeignNumber :: ReadForeign Number where
   readImpl = readNumber
 
-instance readInt :: ReadForeign Int where
+instance readForeignInt :: ReadForeign Int where
   readImpl = readInt
 
-instance readString :: ReadForeign String where
+instance readForeignString :: ReadForeign String where
   readImpl = readString
 
-instance readBoolean :: ReadForeign Boolean where
+instance readForeignBoolean :: ReadForeign Boolean where
   readImpl = readBoolean
 
-instance readArray :: ReadForeign a => ReadForeign (Array a) where
+instance readForeignArray :: ReadForeign a => ReadForeign (Array a) where
   readImpl = readElements <=< readArray
     where
       readElements xs = sequence $ readImpl <$> xs
 
-instance readNullOrUndefined :: ReadForeign a => ReadForeign (NullOrUndefined a) where
+instance readForeignNullOrUndefined :: ReadForeign a => ReadForeign (NullOrUndefined a) where
   readImpl = readNullOrUndefined readImpl
 
-instance readMaybe :: ReadForeign a => ReadForeign (Maybe a) where
+instance readForeignMaybe :: ReadForeign a => ReadForeign (Maybe a) where
   readImpl = map unNullOrUndefined <<< readImpl
 
-instance readNullable :: ReadForeign a => ReadForeign (Nullable a) where
+instance readForeignNullable :: ReadForeign a => ReadForeign (Nullable a) where
   readImpl o = withExcept (map reformat) $
     map toNullable <$> traverse readImpl =<< readNull o
     where
@@ -113,10 +115,20 @@ instance readNullable :: ReadForeign a => ReadForeign (Nullable a) where
         TypeMismatch inner other -> TypeMismatch ("Nullable " <> inner) other
         _ -> error
 
-instance readStrMap :: ReadForeign a => ReadForeign (StrMap.StrMap a) where
+instance readForeignStrMap :: ReadForeign a => ReadForeign (StrMap.StrMap a) where
   readImpl = sequence <<< StrMap.mapWithKey (const readImpl) <=< readStrMap
 
-instance readRecord ::
+instance readForeignTuple :: (ReadForeign a, ReadForeign b) => ReadForeign (Tuple a b) where
+  readImpl = asTuple <=< readArray
+    where asTuple :: Array Foreign -> F (Tuple a b)
+          asTuple = case _ of
+            [a, b] -> do
+              ra <- readImpl a
+              rb <- readImpl b
+              pure $ Tuple ra rb
+            l -> fail $ TypeMismatch "2 values" (show (length l) <> " values")
+
+instance readForeignRecord ::
   ( RowToList fields fieldList
   , ReadForeignFields fieldList () fields
   ) => ReadForeign (Record fields) where
@@ -133,7 +145,7 @@ class ReadForeignFields (xs :: RowList) (from :: # Type) (to :: # Type)
     -> Foreign
     -> F (Builder (Record from) (Record to))
 
-instance readFieldsCons ::
+instance readForeignFieldsCons ::
   ( IsSymbol name
   , ReadForeign ty
   , ReadForeignFields tail from from'
@@ -153,7 +165,7 @@ instance readFieldsCons ::
       name = reflectSymbol nameP
       withExcept' = withExcept <<< map $ ErrorAtProperty name
 
-instance readFieldsNil ::
+instance readForeignFieldsNil ::
   ReadForeignFields Nil () () where
   getFields _ _ =
     pure id
@@ -196,6 +208,9 @@ instance writeForeignNullable :: WriteForeign a => WriteForeign (Nullable a) whe
 
 instance writeForeignStrMap :: WriteForeign a => WriteForeign (StrMap.StrMap a) where
   writeImpl = toForeign <<< StrMap.mapWithKey (const writeImpl)
+
+instance writeForeignTuple :: (WriteForeign a, WriteForeign b) => WriteForeign (Tuple a b) where
+  writeImpl (Tuple a b) = writeImpl [writeImpl a, writeImpl b]
 
 instance recordWriteForeign ::
   ( RowToList row rl
