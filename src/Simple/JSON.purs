@@ -95,9 +95,7 @@ instance readBoolean :: ReadForeign Boolean where
   readImpl = readBoolean
 
 instance readArray :: ReadForeign a => ReadForeign (Array a) where
-  readImpl = readElements <=< readArray
-    where
-      readElements xs = sequence $ readImpl <$> xs
+  readImpl = traverse readImpl <=< readArray
 
 instance readNullOrUndefined :: ReadForeign a => ReadForeign (NullOrUndefined a) where
   readImpl = readNullOrUndefined readImpl
