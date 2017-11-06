@@ -37,6 +37,15 @@ getConfig :: IO (F Config)
 getConfig = liftAff $ readJSON <$> readTextFile UTF8 "./config.json"
 ```
 
+## Some more examples
+
+You might look at some of these examples for ideas:
+
+* Parsing to a different type and modifying the field https://gist.github.com/justinwoo/9d0bb67a84c227f327da7171bb7105c2
+* Untagged sum type parsing https://github.com/justinwoo/untagged-sum-decode-simple-json-example/blob/master/src/Main.purs
+* Date parsing to JS Date in Eff https://github.com/justinwoo/date-parsing-simple-json-example/blob/master/src/Main.purs
+* Enum-style sum type parsing https://github.com/justinwoo/enum-sum-generics-example-simple-json/blob/master/src/Main.purs
+
 ## Warning: `Maybe`
 
 This library will decode `undefined` and `null` as `Nothing` and write `Nothing` as `null`. Please use the `NullOrUndefined` type if you'd like to write `undefined` instead. Please take caution when using `Maybe` as this default may not be what you want.
