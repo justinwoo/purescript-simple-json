@@ -4,11 +4,10 @@ import Prelude
 
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Except (runExcept)
 import Data.Argonaut.Core (Json)
 import Data.Argonaut.Parser (jsonParser)
 import Data.Either (Either(..), either, fromLeft, isRight)
-import Data.Foreign (ForeignError(..), MultipleErrors)
+import Data.Foreign (Foreign, ForeignError(..), MultipleErrors)
 import Data.Foreign.NullOrUndefined (NullOrUndefined)
 import Data.List (List(..))
 import Data.List.NonEmpty (NonEmptyList(..))
@@ -17,7 +16,7 @@ import Data.NonEmpty (NonEmpty(..))
 import Data.Nullable (Nullable)
 import Data.StrMap (StrMap)
 import Partial.Unsafe (unsafePartial)
-import Simple.JSON (class ReadForeign, class WriteForeign, readJSON, writeJSON)
+import Simple.JSON (class ReadForeign, class WriteForeign, readJSON, write, writeJSON)
 import Test.Spec (describe, it)
 import Test.Spec.Assertions (fail, shouldEqual)
 import Test.Spec.Reporter (consoleReporter)
@@ -84,6 +83,8 @@ roundtrips _ enc0 = do
   when (json0 /= json1) $ fail $ "\n\torig: " <> show json0 <> "\n\tenc: " <> show json1
   when (enc1 /= enc2) $ fail enc0
 
+foreign import callMe :: Foreign -> Int
+
 main :: Eff (RunnerEffects ()) Unit
 main = run [consoleReporter] do
   describe "readJSON" do
@@ -106,6 +107,10 @@ main = run [consoleReporter] do
       (unsafePartial $ fromLeft result) `shouldEqual`
         (NonEmptyList (NonEmpty (ErrorAtProperty "b" (TypeMismatch "Nullable String" "Undefined")) Nil))
       isRight (result :: E MyTestNullable) `shouldEqual` false
+
+  describe "write" do
+    it "works with callbacks" do
+      callMe (write {callback:(_ * 2)}) `shouldEqual` 42
 
   describe "roundtrips" do
     it "works with proper JSON" $ roundtrips (Proxy :: Proxy MyTest) """
@@ -132,3 +137,4 @@ main = run [consoleReporter] do
     it "works with Nullable" $ roundtrips (Proxy :: Proxy MyTestNullable) """
       { "a": null, "b": "a" }
     """
+

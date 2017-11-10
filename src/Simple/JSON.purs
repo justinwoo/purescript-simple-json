@@ -21,7 +21,7 @@ module Simple.JSON (
 import Prelude
 
 import Control.Monad.Except (runExcept, withExcept)
-import Data.Either (Either)
+import Data.Either (Either(..))
 import Data.Foreign (F, Foreign, ForeignError(..), MultipleErrors, readArray, readBoolean, readChar, readInt, readNull, readNumber, readString, toForeign)
 import Data.Foreign.Index (readProp)
 import Data.Foreign.Internal (readStrMap)
@@ -36,6 +36,7 @@ import Data.StrMap as StrMap
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
 import Data.Traversable (sequence, traverse)
 import Global.Unsafe (unsafeStringify)
+import Partial.Unsafe (unsafeCrashWith)
 import Type.Row (class RowLacks, class RowToList, Cons, Nil, RLProxy(RLProxy), kind RowList)
 
 -- | Read a JSON string to a type `a` while returning a `MultipleErrors` if the
@@ -226,3 +227,10 @@ instance consWriteForeignFields ::
 instance nilWriteForeignFields ::
   WriteForeignFields Nil row () () where
   writeImplFields _ _ = id
+
+instance writeFunction :: (ReadForeign a, WriteForeign b) => WriteForeign (a -> b) where
+  writeImpl f = toForeign f'
+    where f' d = case runExcept $ read d of
+            Right r -> write $ f r
+            Left e -> unsafeCrashWith $ show e
+
