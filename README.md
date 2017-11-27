@@ -45,6 +45,7 @@ You might look at some of these examples for ideas:
 * Untagged sum type parsing https://github.com/justinwoo/untagged-sum-decode-simple-json-example/blob/master/src/Main.purs
 * Date parsing to JS Date in Eff https://github.com/justinwoo/date-parsing-simple-json-example/blob/master/src/Main.purs
 * Enum-style sum type parsing https://github.com/justinwoo/enum-sum-generics-example-simple-json/blob/master/src/Main.purs
+* These and more here https://www.reddit.com/r/purescript/comments/7b5y7q/some_extra_examples_of_simplejson_usage/
 
 ## Warning: `Maybe`
 
