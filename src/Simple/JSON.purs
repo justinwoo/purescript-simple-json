@@ -9,20 +9,24 @@ module Simple.JSON (
 , readImpl
 , class ReadForeignFields
 , getFields
+, class ReadForeignVariant
+, readVariantImpl
 
 , class WriteForeign
 , writeImpl
-
 , class WriteForeignFields
 , writeImplFields
+, class WriteForeignVariant
+, writeVariantImpl
 
 ) where
 
 import Prelude
 
+import Control.Alt ((<|>))
 import Control.Monad.Except (runExcept, withExcept)
 import Data.Either (Either)
-import Data.Foreign (F, Foreign, ForeignError(..), MultipleErrors, readArray, readBoolean, readChar, readInt, readNull, readNumber, readString, toForeign)
+import Data.Foreign (F, Foreign, ForeignError(..), MultipleErrors, fail, readArray, readBoolean, readChar, readInt, readNull, readNumber, readString, toForeign)
 import Data.Foreign.Index (readProp)
 import Data.Foreign.Internal (readStrMap)
 import Data.Foreign.JSON (parseJSON)
@@ -35,7 +39,9 @@ import Data.Record.Builder as Builder
 import Data.StrMap as StrMap
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
 import Data.Traversable (sequence, traverse)
+import Data.Variant (Variant, inj, on)
 import Global.Unsafe (unsafeStringify)
+import Partial.Unsafe (unsafeCrashWith)
 import Type.Row (class RowLacks, class RowToList, Cons, Nil, RLProxy(RLProxy), kind RowList)
 
 -- | Read a JSON string to a type `a` while returning a `MultipleErrors` if the
@@ -156,6 +162,41 @@ instance readFieldsNil ::
   getFields _ _ =
     pure id
 
+instance readForeignVariant ::
+  ( RowToList variants rl
+  , ReadForeignVariant rl variants
+  ) => ReadForeign (Variant variants) where
+  readImpl o = readVariantImpl (RLProxy :: RLProxy rl) o
+
+class ReadForeignVariant (xs :: RowList) (row :: # Type)
+  | xs -> row where
+  readVariantImpl :: RLProxy xs
+    -> Foreign
+    -> F (Variant row)
+
+instance readVariantNil ::
+  ReadForeignVariant Nil trash where
+  readVariantImpl _ _ = fail $ ForeignError "Unable to match any variant member."
+
+instance readVariantCons ::
+  ( IsSymbol name
+  , ReadForeign ty
+  , RowCons name ty trash row
+  , ReadForeignVariant tail row
+  ) => ReadForeignVariant (Cons name ty tail) row where
+  readVariantImpl _ o = do
+    obj :: { type :: String, value :: Foreign } <- readImpl o
+    if obj.type == name
+      then do
+        value :: ty <- readImpl obj.value
+        pure $ inj namep value
+      else
+        (fail <<< ForeignError $ "Did not match variant tag " <> name)
+    <|> readVariantImpl (RLProxy :: RLProxy tail) o
+    where
+      namep = SProxy :: SProxy name
+      name = reflectSymbol namep
+
 -- | A class for writing a value into JSON
 -- | need to do this intelligently using Foreign probably, because of null and undefined whatever
 class WriteForeign a where
@@ -226,3 +267,38 @@ instance consWriteForeignFields ::
 instance nilWriteForeignFields ::
   WriteForeignFields Nil row () () where
   writeImplFields _ _ = id
+
+instance writeForeignVariant ::
+  ( RowToList row rl
+  , WriteForeignVariant rl row
+  ) => WriteForeign (Variant row) where
+  writeImpl variant = writeVariantImpl (RLProxy :: RLProxy rl) variant
+
+class WriteForeignVariant (rl :: RowList) (row :: # Type)
+  | rl -> row where
+  writeVariantImpl :: forall g h. g rl -> Variant row -> Foreign
+
+instance nilWriteForeignVariant ::
+  WriteForeignVariant Nil () where
+  writeVariantImpl _ _ =
+    -- a PureScript-defined variant cannot reach this path, but a JavaScript FFI one could.
+    unsafeCrashWith "Variant was not able to be writen row WriteForeign."
+
+instance consWriteForeignVariant ::
+  ( IsSymbol name
+  , WriteForeign ty
+  , RowCons name ty subRow row
+  , WriteForeignVariant tail subRow
+  ) => WriteForeignVariant (Cons name ty tail) row where
+  writeVariantImpl _ variant = do
+    on
+      namep
+      writeVariant
+      (writeVariantImpl (RLProxy :: RLProxy tail))
+      variant
+    where
+    namep = SProxy :: SProxy name
+    writeVariant value = toForeign
+      { type: reflectSymbol namep
+      , value: writeImpl value
+      }

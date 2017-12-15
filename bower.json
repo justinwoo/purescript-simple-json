@@ -16,7 +16,8 @@
     "purescript-foreign-generic": "^5.0.0",
     "purescript-typelevel-prelude": "^2.4.0",
     "purescript-record": "^0.2.1",
-    "purescript-nullable": "^3.0.0"
+    "purescript-nullable": "^3.0.0",
+    "purescript-variant": "^4.0.0"
   },
   "devDependencies": {
     "purescript-console": "^3.0.0",
