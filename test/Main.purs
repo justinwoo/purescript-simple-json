@@ -4,7 +4,6 @@ import Prelude
 
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Except (runExcept)
 import Data.Argonaut.Core (Json)
 import Data.Argonaut.Parser (jsonParser)
 import Data.Either (Either(..), either, fromLeft, isRight)
@@ -16,6 +15,7 @@ import Data.Maybe (Maybe)
 import Data.NonEmpty (NonEmpty(..))
 import Data.Nullable (Nullable)
 import Data.StrMap (StrMap)
+import Data.Variant (Variant)
 import Partial.Unsafe (unsafePartial)
 import Simple.JSON (class ReadForeign, class WriteForeign, readJSON, writeJSON)
 import Test.Spec (describe, it)
@@ -67,6 +67,11 @@ type MyTestNullable =
   { a :: Nullable String
   , b :: Nullable String
   }
+
+type MyTestVariant = Variant
+  ( a :: String
+  , b :: Int
+  )
 
 
 roundtrips :: forall a. ReadForeign a => WriteForeign a => Proxy a -> String -> Aff (RunnerEffects ()) Unit
@@ -131,4 +136,7 @@ main = run [consoleReporter] do
     """
     it "works with Nullable" $ roundtrips (Proxy :: Proxy MyTestNullable) """
       { "a": null, "b": "a" }
+    """
+    it "works with Variant" $ roundtrips (Proxy :: Proxy MyTestVariant) """
+      { "type": "b", "value": 123  }
     """
