@@ -73,10 +73,16 @@ write :: forall a
 write = writeImpl
 
 read :: forall a
+   . ReadForeign a
+  => Foreign
+  -> Either MultipleErrors a
+read = runExcept <<< readImpl
+
+read' :: forall a
   .  ReadForeign a
   => Foreign
   -> F a
-read = readImpl
+read' = readImpl
 
 -- | A class for reading foreign values to a type
 class ReadForeign a where
@@ -276,7 +282,7 @@ instance writeForeignVariant ::
 
 class WriteForeignVariant (rl :: RowList) (row :: # Type)
   | rl -> row where
-  writeVariantImpl :: forall g h. g rl -> Variant row -> Foreign
+  writeVariantImpl :: forall g. g rl -> Variant row -> Foreign
 
 instance nilWriteForeignVariant ::
   WriteForeignVariant Nil () where
