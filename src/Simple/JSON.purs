@@ -4,6 +4,7 @@ module Simple.JSON (
 , writeJSON
 , write
 , read
+, read'
 
 , class ReadForeign
 , readImpl
