@@ -235,6 +235,9 @@ instance writeForeignArray :: WriteForeign a => WriteForeign (Array a) where
 instance writeForeignNonEmptyList :: WriteForeign a => WriteForeign (NonEmptyList a) where
   writeImpl xs = toForeign $ fromFoldable $ writeImpl <$> xs
 
+instance writeForeignForeignError :: WriteForeign ForeignError where
+  writeImpl e = toForeign $ (show e)
+  
 instance writeForeignNullOrUndefined :: WriteForeign a => WriteForeign (NullOrUndefined a) where
   writeImpl (NullOrUndefined a) = maybe undefined writeImpl a
 
