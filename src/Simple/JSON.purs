@@ -26,12 +26,14 @@ import Prelude
 
 import Control.Alt ((<|>))
 import Control.Monad.Except (runExcept, withExcept)
+import Data.Array (fromFoldable)
 import Data.Either (Either)
 import Data.Foreign (F, Foreign, ForeignError(..), MultipleErrors, fail, readArray, readBoolean, readChar, readInt, readNull, readNumber, readString, toForeign)
 import Data.Foreign.Index (readProp)
 import Data.Foreign.Internal (readStrMap)
 import Data.Foreign.JSON (parseJSON)
 import Data.Foreign.NullOrUndefined (NullOrUndefined(NullOrUndefined), readNullOrUndefined, unNullOrUndefined, undefined)
+import Data.List.Types (NonEmptyList)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Record (get)
@@ -230,6 +232,12 @@ instance writeForeignBoolean :: WriteForeign Boolean where
 instance writeForeignArray :: WriteForeign a => WriteForeign (Array a) where
   writeImpl xs = toForeign $ writeImpl <$> xs
 
+instance writeForeignNonEmptyList :: WriteForeign a => WriteForeign (NonEmptyList a) where
+  writeImpl xs = toForeign $ fromFoldable $ writeImpl <$> xs
+
+instance writeForeignForeignError :: WriteForeign ForeignError where
+  writeImpl e = toForeign $ (show e)
+  
 instance writeForeignNullOrUndefined :: WriteForeign a => WriteForeign (NullOrUndefined a) where
   writeImpl (NullOrUndefined a) = maybe undefined writeImpl a
 
