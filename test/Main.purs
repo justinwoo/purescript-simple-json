@@ -8,7 +8,6 @@ import Data.Argonaut.Core (Json)
 import Data.Argonaut.Parser (jsonParser)
 import Data.Either (Either(..), either, fromLeft, isRight)
 import Data.Foreign (ForeignError(..), MultipleErrors)
-import Data.Foreign.NullOrUndefined (NullOrUndefined)
 import Data.List (List(..))
 import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe)
@@ -38,7 +37,7 @@ type MyTestNull =
   , b :: String
   , c :: Boolean
   , d :: Array String
-  , e :: NullOrUndefined (Array String)
+  , e :: Maybe (Array String)
   }
 
 type MyTestStrMap =
@@ -102,7 +101,7 @@ main = run [consoleReporter] do
 
     it "works with missing Maybe fields by setting them to Nothing" do
       let result = readJSON "{}"
-      (writeJSON <$> (result :: E MyTestMaybe)) `shouldEqual` (Right """{"a":null}""")
+      (writeJSON <$> (result :: E MyTestMaybe)) `shouldEqual` (Right """{}""")
 
     it "fails with undefined for null with correct error message" do
       let result = readJSON """
@@ -116,10 +115,10 @@ main = run [consoleReporter] do
     it "works with proper JSON" $ roundtrips (Proxy :: Proxy MyTest) """
         { "a": 1, "b": "asdf", "c": true, "d": ["A", "B"]}
       """
-    it "works with JSON lacking NullOrUndefined field" $ roundtrips (Proxy :: Proxy MyTestNull) """
+    it "works with JSON lacking Maybe field" $ roundtrips (Proxy :: Proxy MyTestNull) """
         { "a": 1, "b": "asdf", "c": true, "d": ["A", "B"]}
       """
-    it "works with JSON containing NullOrUndefined field" $ roundtrips (Proxy :: Proxy MyTestNull) """
+    it "works with JSON containing Maybe field" $ roundtrips (Proxy :: Proxy MyTestNull) """
         { "a": 1, "b": "asdf", "c": true, "d": ["A", "B"], "e": ["C", "D"]}
       """
     it "works with JSON containing StrMap field" $ roundtrips (Proxy :: Proxy MyTestStrMap) """
@@ -128,12 +127,6 @@ main = run [consoleReporter] do
     it "works with Maybe field and existing value" $ roundtrips (Proxy :: Proxy MyTestMaybe) """
         { "a": "foo" }
       """
-    it "works with Maybe field and null value" $ roundtrips (Proxy :: Proxy MyTestMaybe) """
-        { "a": null }
-      """
-    it "works with many Maybe fields" $ roundtrips (Proxy :: Proxy MyTestManyMaybe) """
-      { "a": "str", "aNull": null, "b":1, "bNull": null, "c":true, "cNull":null, "d":1.1, "dNull":null, "e":["str1", "str2", null], "eNull": null }
-    """
     it "works with Nullable" $ roundtrips (Proxy :: Proxy MyTestNullable) """
       { "a": null, "b": "a" }
     """
