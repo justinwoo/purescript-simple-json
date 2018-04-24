@@ -31,8 +31,8 @@ import Data.Foreign (F, Foreign, ForeignError(..), MultipleErrors, fail, readArr
 import Data.Foreign.Index (readProp)
 import Data.Foreign.Internal (readStrMap)
 import Data.Foreign.JSON (parseJSON)
-import Data.Foreign.NullOrUndefined (NullOrUndefined(NullOrUndefined), readNullOrUndefined, unNullOrUndefined, undefined)
-import Data.Maybe (Maybe(..), maybe)
+import Data.Foreign.NullOrUndefined (readNullOrUndefined, undefined)
+import Data.Maybe (Maybe(Nothing), maybe)
 import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Record (get)
 import Data.Record.Builder (Builder)
@@ -110,11 +110,8 @@ instance readBoolean :: ReadForeign Boolean where
 instance readArray :: ReadForeign a => ReadForeign (Array a) where
   readImpl = traverse readImpl <=< readArray
 
-instance readNullOrUndefined :: ReadForeign a => ReadForeign (NullOrUndefined a) where
-  readImpl = readNullOrUndefined readImpl
-
 instance readMaybe :: ReadForeign a => ReadForeign (Maybe a) where
-  readImpl = map unNullOrUndefined <<< readImpl
+  readImpl = readNullOrUndefined readImpl
 
 instance readNullable :: ReadForeign a => ReadForeign (Nullable a) where
   readImpl o = withExcept (map reformat) $
@@ -230,15 +227,11 @@ instance writeForeignBoolean :: WriteForeign Boolean where
 instance writeForeignArray :: WriteForeign a => WriteForeign (Array a) where
   writeImpl xs = toForeign $ writeImpl <$> xs
 
-instance writeForeignNullOrUndefined :: WriteForeign a => WriteForeign (NullOrUndefined a) where
-  writeImpl (NullOrUndefined a) = maybe undefined writeImpl a
-
 instance writeForeignMaybe :: WriteForeign a => WriteForeign (Maybe a) where
-  writeImpl (Just a) = writeImpl a
-  writeImpl Nothing = toForeign $ toNullable Nothing
+  writeImpl = maybe undefined writeImpl
 
 instance writeForeignNullable :: WriteForeign a => WriteForeign (Nullable a) where
-  writeImpl = writeImpl <<< toMaybe
+  writeImpl = maybe (toForeign $ toNullable Nothing) writeImpl <<< toMaybe
 
 instance writeForeignStrMap :: WriteForeign a => WriteForeign (StrMap.StrMap a) where
   writeImpl = toForeign <<< StrMap.mapWithKey (const writeImpl)
