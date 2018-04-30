@@ -1,5 +1,5 @@
-module Simple.JSON (
-  readJSON
+module Simple.JSON
+( readJSON
 , readJSON'
 , writeJSON
 , write
@@ -27,23 +27,25 @@ import Prelude
 import Control.Alt ((<|>))
 import Control.Monad.Except (runExcept, withExcept)
 import Data.Either (Either)
-import Data.Foreign (F, Foreign, ForeignError(..), MultipleErrors, fail, readArray, readBoolean, readChar, readInt, readNull, readNumber, readString, toForeign)
-import Data.Foreign.Index (readProp)
-import Data.Foreign.Internal (readStrMap)
-import Data.Foreign.JSON (parseJSON)
-import Data.Foreign.NullOrUndefined (readNullOrUndefined, undefined)
 import Data.Maybe (Maybe(Nothing), maybe)
 import Data.Nullable (Nullable, toMaybe, toNullable)
-import Data.Record (get)
-import Data.Record.Builder (Builder)
-import Data.Record.Builder as Builder
-import Data.StrMap as StrMap
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
 import Data.Traversable (sequence, traverse)
 import Data.Variant (Variant, inj, on)
+import Foreign (F, Foreign, ForeignError(..), MultipleErrors, fail, readArray, readBoolean, readChar, readInt, readNull, readNumber, readString, unsafeToForeign)
+import Foreign.Index (readProp)
+import Foreign.Internal (readObject)
+import Foreign.JSON (parseJSON)
+import Foreign.NullOrUndefined (readNullOrUndefined, undefined)
+import Foreign.Object as Object
 import Global.Unsafe (unsafeStringify)
 import Partial.Unsafe (unsafeCrashWith)
-import Type.Row (class RowLacks, class RowToList, Cons, Nil, RLProxy(RLProxy), kind RowList)
+import Prim.Row as Row
+import Prim.RowList (class RowToList, Cons, Nil, kind RowList)
+import Record (get)
+import Record.Builder (Builder)
+import Record.Builder as Builder
+import Type.Prelude (RLProxy(..))
 
 -- | Read a JSON string to a type `a` while returning a `MultipleErrors` if the
 -- | parsing failed.
@@ -121,8 +123,8 @@ instance readNullable :: ReadForeign a => ReadForeign (Nullable a) where
         TypeMismatch inner other -> TypeMismatch ("Nullable " <> inner) other
         _ -> error
 
-instance readStrMap :: ReadForeign a => ReadForeign (StrMap.StrMap a) where
-  readImpl = sequence <<< StrMap.mapWithKey (const readImpl) <=< readStrMap
+instance readObject :: ReadForeign a => ReadForeign (Object.Object a) where
+  readImpl = sequence <<< Object.mapWithKey (const readImpl) <=< readObject
 
 instance readRecord ::
   ( RowToList fields fieldList
@@ -145,8 +147,8 @@ instance readFieldsCons ::
   ( IsSymbol name
   , ReadForeign ty
   , ReadForeignFields tail from from'
-  , RowLacks name from'
-  , RowCons name ty from' to
+  , Row.Lacks name from'
+  , Row.Cons name ty from' to
   ) => ReadForeignFields (Cons name ty tail) from to where
   getFields _ obj = do
     value :: ty <- withExcept' $ readImpl =<< readProp name obj
@@ -164,7 +166,7 @@ instance readFieldsCons ::
 instance readFieldsNil ::
   ReadForeignFields Nil () () where
   getFields _ _ =
-    pure id
+    pure identity
 
 instance readForeignVariant ::
   ( RowToList variants rl
@@ -185,7 +187,7 @@ instance readVariantNil ::
 instance readVariantCons ::
   ( IsSymbol name
   , ReadForeign ty
-  , RowCons name ty trash row
+  , Row.Cons name ty trash row
   , ReadForeignVariant tail row
   ) => ReadForeignVariant (Cons name ty tail) row where
   readVariantImpl _ o = do
@@ -201,46 +203,46 @@ instance readVariantCons ::
       namep = SProxy :: SProxy name
       name = reflectSymbol namep
 
--- | A class for writing a value into JSON
--- | need to do this intelligently using Foreign probably, because of null and undefined whatever
+-- -- | A class for writing a value into JSON
+-- -- | need to do this intelligently using Foreign probably, because of null and undefined whatever
 class WriteForeign a where
   writeImpl :: a -> Foreign
 
 instance writeForeignForeign :: WriteForeign Foreign where
-  writeImpl = id
+  writeImpl = identity
 
 instance writeForeignString :: WriteForeign String where
-  writeImpl = toForeign
+  writeImpl = unsafeToForeign
 
 instance writeForeignInt :: WriteForeign Int where
-  writeImpl = toForeign
+  writeImpl = unsafeToForeign
 
 instance writeForeignChar :: WriteForeign Char where
-  writeImpl = toForeign
+  writeImpl = unsafeToForeign
 
 instance writeForeignNumber :: WriteForeign Number where
-  writeImpl = toForeign
+  writeImpl = unsafeToForeign
 
 instance writeForeignBoolean :: WriteForeign Boolean where
-  writeImpl = toForeign
+  writeImpl = unsafeToForeign
 
 instance writeForeignArray :: WriteForeign a => WriteForeign (Array a) where
-  writeImpl xs = toForeign $ writeImpl <$> xs
+  writeImpl xs = unsafeToForeign $ writeImpl <$> xs
 
 instance writeForeignMaybe :: WriteForeign a => WriteForeign (Maybe a) where
   writeImpl = maybe undefined writeImpl
 
 instance writeForeignNullable :: WriteForeign a => WriteForeign (Nullable a) where
-  writeImpl = maybe (toForeign $ toNullable Nothing) writeImpl <<< toMaybe
+  writeImpl = maybe (unsafeToForeign $ toNullable Nothing) writeImpl <<< toMaybe
 
-instance writeForeignStrMap :: WriteForeign a => WriteForeign (StrMap.StrMap a) where
-  writeImpl = toForeign <<< StrMap.mapWithKey (const writeImpl)
+instance writeForeignObject :: WriteForeign a => WriteForeign (Object.Object a) where
+  writeImpl = unsafeToForeign <<< Object.mapWithKey (const writeImpl)
 
 instance recordWriteForeign ::
   ( RowToList row rl
   , WriteForeignFields rl row () to
   ) => WriteForeign (Record row) where
-  writeImpl rec = toForeign $ Builder.build steps {}
+  writeImpl rec = unsafeToForeign $ Builder.build steps {}
     where
       rlp = RLProxy :: RLProxy rl
       steps = writeImplFields rlp rec
@@ -253,9 +255,9 @@ instance consWriteForeignFields ::
   ( IsSymbol name
   , WriteForeign ty
   , WriteForeignFields tail row from from'
-  , RowCons name ty whatever row
-  , RowLacks name from'
-  , RowCons name Foreign from' to
+  , Row.Cons name ty whatever row
+  , Row.Lacks name from'
+  , Row.Cons name Foreign from' to
   ) => WriteForeignFields (Cons name ty tail) row from to where
   writeImplFields _ rec = result
     where
@@ -266,7 +268,7 @@ instance consWriteForeignFields ::
       result = Builder.insert namep value <<< rest
 instance nilWriteForeignFields ::
   WriteForeignFields Nil row () () where
-  writeImplFields _ _ = id
+  writeImplFields _ _ = identity
 
 instance writeForeignVariant ::
   ( RowToList row rl
@@ -287,7 +289,7 @@ instance nilWriteForeignVariant ::
 instance consWriteForeignVariant ::
   ( IsSymbol name
   , WriteForeign ty
-  , RowCons name ty subRow row
+  , Row.Cons name ty subRow row
   , WriteForeignVariant tail subRow
   ) => WriteForeignVariant (Cons name ty tail) row where
   writeVariantImpl _ variant = do
@@ -298,7 +300,7 @@ instance consWriteForeignVariant ::
       variant
     where
     namep = SProxy :: SProxy name
-    writeVariant value = toForeign
+    writeVariant value = unsafeToForeign
       { type: reflectSymbol namep
       , value: writeImpl value
       }
