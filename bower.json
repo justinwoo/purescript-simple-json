@@ -12,16 +12,16 @@
     "output"
   ],
   "dependencies": {
-    "purescript-prelude": "^3.3.0",
-    "purescript-foreign-generic": "^6.0.0",
-    "purescript-typelevel-prelude": "^2.7.0",
-    "purescript-record": "^0.2.6",
-    "purescript-nullable": "^3.0.0",
-    "purescript-variant": "^4.1.0"
+    "purescript-prelude": "^4.0.0",
+    "purescript-typelevel-prelude": "^3.0.0",
+    "purescript-record": "^1.0.0",
+    "purescript-variant": "^5.0.0",
+    "purescript-nullable": "^4.0.0",
+    "purescript-foreign-object": "^1.0.0",
+    "purescript-foreign-generic": "justinwoo/purescript-foreign-generic#compiler/0.12",
+    "purescript-globals": "^4.0.0"
   },
   "devDependencies": {
-    "purescript-console": "^3.0.0",
-    "purescript-argonaut-core": "^3.1.1",
-    "purescript-spec": "^2.0.0"
+    "purescript-assert": "^4.0.0"
   }
 }
