@@ -5,6 +5,8 @@ module Simple.JSON
 , write
 , read
 , read'
+, parseJSON
+, undefined
 
 , class ReadForeign
 , readImpl
@@ -25,18 +27,21 @@ module Simple.JSON
 import Prelude
 
 import Control.Alt ((<|>))
-import Control.Monad.Except (runExcept, withExcept)
+import Control.Monad.Except (ExceptT(..), runExcept, withExcept)
+import Data.Bifunctor (lmap)
 import Data.Either (Either)
-import Data.Maybe (Maybe(Nothing), maybe)
+import Data.Identity (Identity(..))
+import Data.Maybe (Maybe(..), maybe)
 import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
 import Data.Traversable (sequence, traverse)
 import Data.Variant (Variant, inj, on)
-import Foreign (F, Foreign, ForeignError(..), MultipleErrors, fail, readArray, readBoolean, readChar, readInt, readNull, readNumber, readString, unsafeToForeign)
+import Effect.Exception (message, try)
+import Effect.Uncurried as EU
+import Effect.Unsafe (unsafePerformEffect)
+import Foreign (F, Foreign, ForeignError(..), MultipleErrors, fail, isNull, isUndefined, readArray, readBoolean, readChar, readInt, readNull, readNumber, readString, tagOf, unsafeFromForeign, unsafeToForeign)
 import Foreign.Index (readProp)
-import Foreign.Internal (readObject)
-import Foreign.JSON (parseJSON)
-import Foreign.NullOrUndefined (readNullOrUndefined, undefined)
+import Foreign.Object (Object)
 import Foreign.Object as Object
 import Global.Unsafe (unsafeStringify)
 import Partial.Unsafe (unsafeCrashWith)
@@ -87,6 +92,24 @@ read' :: forall a
   -> F a
 read' = readImpl
 
+foreign import _parseJSON :: EU.EffectFn1 String Foreign
+
+parseJSON :: String -> F Foreign
+parseJSON
+    = ExceptT
+  <<< Identity
+  <<< lmap (pure <<< ForeignError <<< message)
+  <<< runPure
+  <<< try
+  <<< EU.runEffectFn1 _parseJSON
+  where
+    runPure = unsafePerformEffect
+
+foreign import _undefined :: Foreign
+
+undefined :: Foreign
+undefined = _undefined
+
 -- | A class for reading foreign values to a type
 class ReadForeign a where
   readImpl :: Foreign -> F a
@@ -114,6 +137,9 @@ instance readArray :: ReadForeign a => ReadForeign (Array a) where
 
 instance readMaybe :: ReadForeign a => ReadForeign (Maybe a) where
   readImpl = readNullOrUndefined readImpl
+    where
+      readNullOrUndefined _ value | isNull value || isUndefined value = pure Nothing
+      readNullOrUndefined f value = Just <$> f value
 
 instance readNullable :: ReadForeign a => ReadForeign (Nullable a) where
   readImpl o = withExcept (map reformat) $
@@ -124,7 +150,13 @@ instance readNullable :: ReadForeign a => ReadForeign (Nullable a) where
         _ -> error
 
 instance readObject :: ReadForeign a => ReadForeign (Object.Object a) where
-  readImpl = sequence <<< Object.mapWithKey (const readImpl) <=< readObject
+  readImpl = sequence <<< Object.mapWithKey (const readImpl) <=< readObject'
+    where
+      readObject' :: Foreign -> F (Object Foreign)
+      readObject' value
+        | tagOf value == "Object" = pure $ unsafeFromForeign value
+        | otherwise = fail $ TypeMismatch "Object" (tagOf value)
+
 
 instance readRecord ::
   ( RowToList fields fieldList

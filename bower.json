@@ -18,8 +18,9 @@
     "purescript-variant": "^5.0.0",
     "purescript-nullable": "^4.0.0",
     "purescript-foreign-object": "^1.0.0",
-    "purescript-foreign-generic": "justinwoo/purescript-foreign-generic#compiler/0.12",
-    "purescript-globals": "^4.0.0"
+    "purescript-globals": "^4.0.0",
+    "purescript-foreign": "^5.0.0",
+    "purescript-exceptions": "^4.0.0"
   },
   "devDependencies": {
     "purescript-assert": "^4.0.0"
