@@ -4,7 +4,9 @@
 
 A simple Foreign/JSON library based on the Purescript's RowToList feature.
 
-Requires compiler version 0.11.6 or greater.
+You can learn almost everything you need to know from my slides here:
+
+[![](https://i.imgur.com/gzjyTTP.png)](https://speakerdeck.com/justinwoo/easy-json-deserialization-with-simple-json-and-record)
 
 ## Usage
 
