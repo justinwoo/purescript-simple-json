@@ -49,6 +49,8 @@ You might look at some of these examples for ideas:
 * Enum-style sum type parsing https://github.com/justinwoo/enum-sum-generics-example-simple-json/blob/master/src/Main.purs
 * These and more here https://www.reddit.com/r/purescript/comments/7b5y7q/some_extra_examples_of_simplejson_usage/
 
+These may be outdated, so you probably will want to trust your own compiler errors than the code in these examples.
+
 ## Warning: `Maybe`
 
 This library will decode `undefined` and `null` as `Nothing` and write `Nothing` as `undefined`. Please use the `Nullable` type if you'd like to read and write `null` instead. Please take caution when using `Maybe` as this default may not be what you want.
