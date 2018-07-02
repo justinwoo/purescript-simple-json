@@ -10,6 +10,19 @@ You can learn almost everything you need to know from my slides here:
 
 ## Usage
 
+In brief:
+
+```purs
+type MyJSON =
+  { apple :: String
+  , banana :: Int
+  , cherry :: Maybe Boolean
+  }
+  
+decodeToMyJSON :: String -> Either (NonEmptyList ForeignError) MyJSON
+decodeToMyJSON = SimpleJSON.readJSON
+```purs
+
 See the [API Docs](https://pursuit.purescript.org/packages/purescript-simple-json/) or the [tests](test/Main.purs) for usage.
 
 ## Usage Example
