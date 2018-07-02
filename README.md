@@ -21,7 +21,7 @@ type MyJSON =
   
 decodeToMyJSON :: String -> Either (NonEmptyList ForeignError) MyJSON
 decodeToMyJSON = SimpleJSON.readJSON
-```purs
+```
 
 See the [API Docs](https://pursuit.purescript.org/packages/purescript-simple-json/) or the [tests](test/Main.purs) for usage.
 
