@@ -8,6 +8,8 @@ You can learn almost everything you need to know from my slides here:
 
 [![](https://i.imgur.com/gzjyTTP.png)](https://speakerdeck.com/justinwoo/easy-json-deserialization-with-simple-json-and-record)
 
+Note that the slides are based on an older version of the library and on PureScript 0.11.6.
+
 ## Usage
 
 In brief:
