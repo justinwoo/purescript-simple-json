@@ -23,6 +23,7 @@
     "purescript-exceptions": "^4.0.0"
   },
   "devDependencies": {
-    "purescript-assert": "^4.0.0"
+    "purescript-assert": "^4.0.0",
+    "purescript-generics-rep": "^6.0.0"
   }
 }

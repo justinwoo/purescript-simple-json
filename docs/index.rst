@@ -15,3 +15,4 @@ Pages
 .. toctree::
 
   intro
+  generics-rep

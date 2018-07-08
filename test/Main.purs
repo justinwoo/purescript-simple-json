@@ -18,6 +18,7 @@ import Foreign.Object (Object)
 import Partial.Unsafe (unsafePartial)
 import Simple.JSON (class ReadForeign, class WriteForeign, parseJSON, readJSON, writeJSON)
 import Test.Assert (assert)
+import Test.Generic as Test.Generic
 import Type.Proxy (Proxy(..))
 
 type E a = Either MultipleErrors a
@@ -145,3 +146,6 @@ main = do
   roundtrips (Proxy :: Proxy MyTestVariant) """
     { "type": "b", "value": 123  }
   """
+
+  -- run examples
+  Test.Generic.main

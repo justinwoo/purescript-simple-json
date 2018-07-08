@@ -1,7 +1,6 @@
 Introduction
 ============
 
---------------------
 What is ``Foreign``?
 --------------------
 
@@ -19,7 +18,6 @@ We'll visit what this ``F`` failure type is later, since you won't need to use i
 
 .. _parseJSON: https://pursuit.purescript.org/packages/purescript-simple-json/4.0.0/docs/Simple.JSON#v:parseJSON
 
--------------------------------
 How you should use this library
 -------------------------------
 
