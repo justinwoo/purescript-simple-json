@@ -1,20 +1,17 @@
-.. PureScript-Simple-JSON documentation master file, created by
-   sphinx-quickstart on Sun Jul  8 15:07:51 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+PureScript-Simple-JSON Guide
+============================
 
-Welcome to PureScript-Simple-JSON's documentation!
-==================================================
+This is a guide for the PureScript library `Simple-JSON <https://github.com/justinwoo/purescript-simple-json>`_, which provides an easy way to decode either ``Foreign`` (JS) values or JSON ``String`` values with the most "obvious" representation. This guide will also try to guide you through some of the details of how PureScript the language works, as you may be new to PureScript or not know its characteristics.
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+Overall, this library provides you largely automatic ways to get decoding, but does not try to decode any types that do not actually have a JS representation. This means that this library does not provide you with automatic solutions for decoding and encoding Sum or Product types, but there will be a section on how to use Generics in PureScript to achieve the encoding of Sum and Product types that you want.
 
+.. tip:: If you are coming from Elm, you can think of this library as providing the automatic encoding/decoding of ports, but actually giving you explicit control of the results and allowing you to define encodings as you need.
 
+.. note:: If there is a topic you would like more help with that is not in this guide, open a issue in the Github repo for it to request it.
 
-Indices and tables
+Pages
 ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. toctree::
+
+  intro
