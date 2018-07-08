@@ -18,7 +18,9 @@ import Foreign.Object (Object)
 import Partial.Unsafe (unsafePartial)
 import Simple.JSON (class ReadForeign, class WriteForeign, parseJSON, readJSON, writeJSON)
 import Test.Assert (assert)
+import Test.EnumSumGeneric as Test.EnumSumGeneric
 import Test.Generic as Test.Generic
+import Test.Inferred as Test.Inferred
 import Type.Proxy (Proxy(..))
 
 type E a = Either MultipleErrors a
@@ -149,3 +151,5 @@ main = do
 
   -- run examples
   Test.Generic.main
+  Test.EnumSumGeneric.main
+  Test.Inferred.main
