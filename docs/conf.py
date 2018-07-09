@@ -44,11 +44,14 @@ extensions = [
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
+source_parsers = {
+   '.md': 'recommonmark.parser.CommonMarkParser',
+}
+
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-# source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ['.rst', '.md']
 
 # The master toctree document.
 master_doc = 'index'
@@ -66,7 +69,7 @@ language = None
 exclude_patterns = [u'_build', 'Thumbs.db', '.DS_Store']
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = 'default'
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -74,7 +77,7 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'nature'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -153,3 +156,6 @@ texinfo_documents = [
      author, 'PureScript-Simple-JSON', 'One line description of project.',
      'Miscellaneous'),
 ]
+
+def setup(app):
+    app.add_stylesheet('css/default.css')
