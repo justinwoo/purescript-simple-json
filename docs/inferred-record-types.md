@@ -36,7 +36,7 @@ We know that there's no representation of this `Either Int String` in JavaScript
 ```hs
 readEitherImpl
   :: forall a b
-    . JSON.ReadForeign a
+   . JSON.ReadForeign a
   => JSON.ReadForeign b
   => Foreign
   -> Foreign.F (Either a b)
@@ -83,7 +83,7 @@ Let's go through a few of these. First, `get`:
 ```hs
 get
   :: forall r r' l a
-    . IsSymbol l
+   . IsSymbol l
   => Cons l a r' r
   => SProxy l
   -> { | r }
@@ -95,7 +95,7 @@ So here right away we can see that the `Cons` constraint is used to declare that
 ```hs
 insert
   :: forall r1 r2 l a
-    . IsSymbol l
+   . IsSymbol l
   => Lacks l r1
   => Cons l a r1 r2
   => SProxy l
@@ -111,7 +111,7 @@ Now, the most involved example:
 ```hs
 rename
   :: forall prev next ty input inter output
-    . IsSymbol prev
+   . IsSymbol prev
   => IsSymbol next
   => Cons prev ty inter input
   => Lacks prev inter
