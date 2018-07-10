@@ -76,7 +76,7 @@ class Lacks
 
 `class Lacks` is a relation of a given `Symbol` label not existing in any of the fields of `row`.
 
-With this bit of knowledge, we can go ahead and look at the docs of the Record_ library.
+With this bit of knowledge, we can go ahead and look at the docs of the [Record](https://pursuit.purescript.org/packages/purescript-record) library.
 
 Let's go through a few of these. First, `get`:
 
