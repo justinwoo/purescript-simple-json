@@ -138,4 +138,4 @@ instance untaggedSumRepArgument ::
 
 And so at this level, we try to decode the `Foreign` value directly to the type of the argument.
 
-With just these few lines of code, we now have generic decoding for our untagged sum type encoding that we can apply to any sum type where `Generic` is derived and the generic representation contains `Sum`, `Constructor`, and `Argument`. To get started with your own instances, check out the example in [test/Generic.purs](https://github.com/justinwoo/purescript-simple-json/blob/master/test/Main.purs) in the Simple-JSON repo.
+With just these few lines of code, we now have generic decoding for our untagged sum type encoding that we can apply to any sum type where `Generic` is derived and the generic representation contains `Sum`, `Constructor`, and `Argument`. To get started with your own instances, check out the example in [test/Generic.purs](https://github.com/justinwoo/purescript-simple-json/blob/master/test/Generic.purs) in the Simple-JSON repo.
