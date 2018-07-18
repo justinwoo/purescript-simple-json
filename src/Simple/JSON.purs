@@ -1,5 +1,6 @@
 module Simple.JSON
-( readJSON
+( E
+, readJSON
 , readJSON'
 , writeJSON
 , write
@@ -52,12 +53,15 @@ import Record.Builder (Builder)
 import Record.Builder as Builder
 import Type.Prelude (RLProxy(..))
 
+-- | An alias for the Either result of decoding
+type E a = Either MultipleErrors a
+
 -- | Read a JSON string to a type `a` while returning a `MultipleErrors` if the
 -- | parsing failed.
 readJSON :: forall a
   .  ReadForeign a
   => String
-  -> Either MultipleErrors a
+  -> E a
 readJSON = runExcept <<< (readImpl <=< parseJSON)
 
 -- | Read a JSON string to a type `a` using `F a`. Useful with record types.
@@ -83,7 +87,7 @@ write = writeImpl
 read :: forall a
    . ReadForeign a
   => Foreign
-  -> Either MultipleErrors a
+  -> E a
 read = runExcept <<< readImpl
 
 read' :: forall a
