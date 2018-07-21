@@ -4,13 +4,13 @@ import Prelude
 
 import Control.Alt ((<|>))
 import Control.Monad.Except (runExcept)
-import Data.Either (Either(..))
+import Data.Either (Either(..), isRight)
 import Effect (Effect)
-import Effect.Console (logShow)
 import Foreign (Foreign)
 import Foreign as Foreign
 import Record as Record
 import Simple.JSON as JSON
+import Test.Assert (assert)
 import Type.Prelude (SProxy(..))
 
 type RecordWithEither =
@@ -48,5 +48,5 @@ readRecordMisnamedField s = do
 
 main :: Effect Unit
 main = do
-  logShow $ readRecordWithEitherJSON """{"apple": 1, "banana": 1}"""
-  logShow $ readRecordWithEitherJSON """{"apple": 1, "banana": "yellow"}"""
+  assert <<< isRight $ readRecordWithEitherJSON """{"apple": 1, "banana": 1}"""
+  assert <<< isRight $ readRecordWithEitherJSON """{"apple": 1, "banana": "yellow"}"""

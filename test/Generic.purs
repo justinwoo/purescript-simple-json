@@ -3,14 +3,14 @@ module Test.Generic where
 import Prelude
 
 import Control.Alt ((<|>))
-import Data.Either (Either)
+import Data.Either (Either, isRight)
 import Data.Generic.Rep as GR
 import Data.Generic.Rep.Show (genericShow)
 import Effect (Effect)
-import Effect.Console (logShow)
 import Foreign (Foreign)
 import Foreign as Foreign
 import Simple.JSON as JSON
+import Test.Assert (assert)
 
 data IntOrBoolean
   = Int Int
@@ -63,7 +63,7 @@ decodeToIntOrBoolean2 = JSON.readJSON
 
 main :: Effect Unit
 main = do
-  logShow $ decodeToIntOrBoolean "1" -- (Right (Int 1))
-  logShow $ decodeToIntOrBoolean "true" -- (Right (Boolean true))
-  logShow $ decodeToIntOrBoolean2 "1" -- (Right (Int2 1))
-  logShow $ decodeToIntOrBoolean2 "true" -- (Right (Boolean2 true))
+  assert <<< isRight $ decodeToIntOrBoolean "1" -- (Right (Int 1))
+  assert <<< isRight $ decodeToIntOrBoolean "true" -- (Right (Boolean true))
+  assert <<< isRight $ decodeToIntOrBoolean2 "1" -- (Right (Int2 1))
+  assert <<< isRight $ decodeToIntOrBoolean2 "true" -- (Right (Boolean2 true))

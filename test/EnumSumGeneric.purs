@@ -4,22 +4,22 @@ import Prelude
 
 import Control.Alt ((<|>))
 import Control.Monad.Except (throwError)
-import Data.Either (Either)
+import Data.Either (Either, isRight)
 import Data.Generic.Rep (class Generic, Constructor(..), NoArguments(..), Sum(..), to)
 import Data.Generic.Rep.Show (genericShow)
 import Effect (Effect)
-import Effect.Console (logShow)
 import Foreign (Foreign)
 import Foreign as Foreign
 import Simple.JSON as JSON
+import Test.Assert (assert)
 import Type.Prelude (class IsSymbol, SProxy(..), reflectSymbol)
 
-enumReadForeignLowercase :: forall a rep
+enumReadForeign :: forall a rep
    . Generic a rep
   => EnumReadForeign rep
   => Foreign
   -> Foreign.F a
-enumReadForeignLowercase f =
+enumReadForeign f =
   to <$> enumReadForeignImpl f
 
 -- type class for "enums", or nullary sum types
@@ -52,19 +52,15 @@ data Fruit
   | Candy
 derive instance genericFruit :: Generic Fruit _
 instance fruitReadForeign :: JSON.ReadForeign Fruit where
-  readImpl = enumReadForeignLowercase
+  readImpl = enumReadForeign
 instance furitShow :: Show Fruit where
   show = genericShow
-
-type MyThing =
-  { fruit :: Fruit
-  }
 
 readFruit :: String -> Either Foreign.MultipleErrors Fruit
 readFruit = JSON.readJSON
 
 main :: Effect Unit
 main = do
-  logShow $ readFruit "\"Abogado\""
-  logShow $ readFruit "\"Boat\""
-  logShow $ readFruit "\"Candy\""
+  assert <<< isRight $ readFruit "\"Abogado\""
+  assert <<< isRight $ readFruit "\"Boat\""
+  assert <<< isRight $ readFruit "\"Candy\""

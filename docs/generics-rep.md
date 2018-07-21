@@ -139,3 +139,79 @@ instance untaggedSumRepArgument ::
 And so at this level, we try to decode the `Foreign` value directly to the type of the argument.
 
 With just these few lines of code, we now have generic decoding for our untagged sum type encoding that we can apply to any sum type where `Generic` is derived and the generic representation contains `Sum`, `Constructor`, and `Argument`. To get started with your own instances, check out the example in [test/Generic.purs](https://github.com/justinwoo/purescript-simple-json/blob/master/test/Generic.purs) in the Simple-JSON repo.
+
+## Working with "Enum" sum types
+
+If you have sum types where all of the constructors are nullary, you may want to work with them as string literals. For example:
+
+```hs
+data Fruit
+  = Abogado
+  | Boat
+  | Candy
+derive instance genericFruit :: Generic Fruit _
+```
+
+Like the above, we should write a function that can work with the generic representation of sum types, so that we can apply this to all enum-like sum types that derive `Generic` and use it like so:
+
+```hs
+instance fruitReadForeign :: JSON.ReadForeign Fruit where
+  readImpl = enumReadForeign
+
+enumReadForeign :: forall a rep
+   . Generic a rep
+  => EnumReadForeign rep
+  => Foreign
+  -> Foreign.F a
+enumReadForeign f =
+  to <$> enumReadForeignImpl f
+```
+
+Fist, we define our class which is take the rep and return a `Foreign.F rep`:
+
+```hs
+class EnumReadForeign rep where
+  enumReadForeignImpl :: Foreign -> Foreign.F rep
+```
+
+Then we only need two instance for this class. First, the instance for the `Sum` type to split cases:
+
+```hs
+instance sumEnumReadForeign ::
+  ( EnumReadForeign a
+  , EnumReadForeign b
+  ) => EnumReadForeign (Sum a b) where
+  enumReadForeignImpl f
+      = Inl <$> enumReadForeignImpl f
+    <|> Inr <$> enumReadForeignImpl f
+```
+
+Then we need to match on `Constructor`, but only when its second argument is `NoArguments`, as we want only to work with enum sum types.
+
+```hs
+instance constructorEnumReadForeign ::
+  ( IsSymbol name
+  ) => EnumReadForeign (Constructor name NoArguments) where
+  enumReadForeignImpl f = do
+    s <- JSON.readImpl f
+    if s == name
+       then pure $ Constructor NoArguments
+       else throwError <<< pure <<< Foreign.ForeignError $
+            "Enum string " <> s <> " did not match expected string " <> name
+    where
+      name = reflectSymbol (SProxy :: SProxy name)
+```
+
+We put a `IsSymbol` constraint on `name` so that can reflect it to a string and check if it is equal to the string that is taken from the foreign value. In the success branch, we construct the `Constructor` value with the `NoArguments` value.
+
+With just this, we can now decode all enum-like sums:
+
+```hs
+readFruit :: String -> Either Foreign.MultipleErrors Fruit
+readFruit = JSON.readJSON
+
+main = do
+  logShow $ readFruit "\"Abogado\""
+  logShow $ readFruit "\"Boat\""
+  logShow $ readFruit "\"Candy\""
+```
