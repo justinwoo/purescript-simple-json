@@ -167,7 +167,7 @@ enumReadForeign f =
   to <$> enumReadForeignImpl f
 ```
 
-Fist, we define our class which is take the rep and return a `Foreign.F rep`:
+First, we define our class which is take the rep and return a `Foreign.F rep`:
 
 ```hs
 class EnumReadForeign rep where
