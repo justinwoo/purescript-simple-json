@@ -1,10 +1,10 @@
 # Quickstart
 
-## Reading Simple Types
+## Decoding Simple Types
 
-Simple-JSON can be used to easily read simple types, such as numbers, ints, strings, booleans, etc. 
+Simple-JSON can be used to easily decode simple types, such as numbers, ints, strings, booleans, etc. 
 
-The following example attempts to parse an integer from the string `"1"` and print it to the console.
+The following example attempts to decode an integer from the string `"1"` and print it to the console.
 ```hs
 import Prelude
 import Data.Either (Either(..))
@@ -21,15 +21,15 @@ main =
       log ("Failed to parse the input as an integer: " <> show errs)
 ```
 
-Note that because `JSON.readJSON` returns `Either MultipleErrors a`, the compiler needs some help inferring that we want to parse out an `Int`.
+Note that because `JSON.readJSON` returns `Either MultipleErrors a`, the compiler needs some help inferring that we want to decode an `Int`.
 
 In this case, the pattern match was explicitly annotated as `Right (int :: Int)`, but in practice another function with concrete types being used in this context would help avoid any ambiguous type inference.
 
-## Writing Simple Types
+## Encoding Simple Types
 
-Writing simple types out as JSON strings is even easier. 
+Encoding simple types as JSON strings is even easier. 
 
-The following example renders an integer as "stringified" JSON and then prints it to the console.
+The following example encodes an integer as "stringified" JSON and then prints it to the console.
 ```hs
 import Prelude
 import Effect (Effect)
@@ -42,11 +42,11 @@ main =
   in log ("Writing the integer: " <> stringifiedInt)
 ```
 
-Writing non-integer simple types is just as easy, but it's helpful to keep in mind that there isn't always enough information for the compiler to infer _exactly_ what the type being written is.
+Encoding non-integer simple types is just as easy, but it's helpful to keep in mind that there isn't always enough information for the compiler to infer _exactly_ what the type being written is.
 
 As was the case before, annotate potentially ambiguous types wherever possible.
 
-## Handling Optional Values
+## Decoding Optional Values
 
 Simple-JSON provides functions that can deal with the two types of optionality one might encounter when dealing with JSON data: `null` and `undefined`.
 
@@ -81,13 +81,17 @@ main = do
         log ("Failed to parse the input as an integer: " <> show errs)
 ```
 
-Like before, we had to supply explicit type annotations to ensure that the compiler can properly parse out these fields correctly. 
+Like before, we had to supply explicit type annotations to ensure that the compiler can correctly decode these fields.
 
-In the case where we want to successfully parse out `null` values, the result needs to be clearly annotated as a `Nullable` type when using `readJSON`. After that, the `toMaybe` function from `Data.Nullable` can unwrap it so it can be handled like any other `Maybe` value.
+In the case where we want to decode `null` values, the compiler must resolve the decoded type as a `Nullable`, either through explicit annotation or in the context of another function. 
 
-It's important to understand ahead of time which type of optional types you'll be expecting. Any time that Simple-JSON parses out an `undefined` field when it expects a `null` (or vice versa), the parser will fail and return `MultipleErrors`.
+After that, the `toMaybe` function from `Data.Nullable` can unwrap it so it can be handled like any other `Maybe` value.
 
-Writing is, as before, quite a bit simpler:
+It's important to understand ahead of time which type of optional values you'll be expecting. Any time that Simple-JSON parses out an `undefined` field when it expects a `null` (or vice versa), the parser will fail and return `MultipleErrors`.
+
+## Encoding Optional Values
+
+Encoding optional values is, as with encoding simple types, quite a bit easier:
 ```hs
 import Prelude
 import Effect (Effect)
@@ -104,8 +108,6 @@ main = do
   log ("Writing out an 'undefined integer: " <> (JSON.writeJSON undefinedInt))
   log ("Writing out an actual ineger: "      <> (JSON.writeJSON actualInt))
 ```
-
-Again, type annotation is very important to make everything work, even though the `null` and `undefined` values will have these types erased when written out as strings.
 
 ## Dealing with Arrays and PureScript Objects
 
