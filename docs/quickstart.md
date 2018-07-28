@@ -2,7 +2,7 @@
 
 ## Decoding Simple Types
 
-Simple-JSON can be used to easily decode simple types, such as numbers, ints, strings, booleans, etc. 
+Simple-JSON can be used to easily decode simple types from JSON, such as numbers, ints, strings, booleans, etc.
 
 The following example attempts to decode an integer from the string `"1"` and print it to the console.
 ```hs
@@ -21,13 +21,13 @@ main =
       log ("Failed to parse the input as an integer: " <> show errs)
 ```
 
-Note that because `JSON.readJSON` returns `Either MultipleErrors a`, the compiler needs some help inferring that we want to decode an `Int`.
+Note that because `JSON.readJSON` returns `Either MultipleErrors a`, the compiler needs some help inferring that we want to decode an `Int` from the given string.
 
 In this case, the pattern match was explicitly annotated as `Right (int :: Int)`, but in practice another function with concrete types being used in this context would help avoid any ambiguous type inference.
 
 ## Encoding Simple Types
 
-Encoding simple types as JSON strings is even easier. 
+Encoding simple types to JSON is even easier. 
 
 The following example encodes an integer as "stringified" JSON and then prints it to the console.
 ```hs
@@ -42,7 +42,7 @@ main =
   in log ("Writing the integer: " <> stringifiedInt)
 ```
 
-Encoding non-integer simple types is just as easy, but it's helpful to keep in mind that there isn't always enough information for the compiler to infer _exactly_ what the type being written is.
+Encoding non-integer simple types to JSON is just as easy, but it's helpful to keep in mind that there isn't always enough information for the compiler to infer _exactly_ what the type being written is.
 
 As was the case before, annotate potentially ambiguous types wherever possible.
 
@@ -81,7 +81,7 @@ main = do
         log ("Failed to parse the input as an integer: " <> show errs)
 ```
 
-Like before, we had to supply explicit type annotations to ensure that the compiler can correctly decode these fields.
+Like before, we had to supply explicit type annotations to ensure that the compiler can correctly decode these fields from JSON.
 
 In the case where we want to decode `null` values, the compiler must resolve the decoded type as a `Nullable`, either through explicit annotation or in the context of another function. 
 
@@ -91,7 +91,7 @@ It's important to understand ahead of time which type of optional values you'll 
 
 ## Encoding Optional Values
 
-Encoding optional values is, as with encoding simple types, quite a bit easier:
+Encoding optional values to JSON is, as with encoding simple types, quite a bit easier:
 ```hs
 import Prelude
 import Effect (Effect)
