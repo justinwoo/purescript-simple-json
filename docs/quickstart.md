@@ -1,12 +1,10 @@
 # Quickstart
 
-Simple-JSON was designed to be the simplest way possible for PureScript users to safely consume untyped, JSON structured data.
+## Reading Simple Types
 
-## Reading and Writing Simple Types
+Simple-JSON can be used to easily read simple types, such as numbers, ints, strings, booleans, etc. 
 
-Simple-JSON can be used to read and write simple types, such as numbers, ints, strings, booleans, etc.
-
-For example, the snippet below attempts to parse an integer from the string `"1"` and print it to the console:
+The following example attempts to parse an integer from the string `"1"` and print it to the console.
 ```hs
 import Prelude
 import Data.Either (Either(..))
@@ -23,9 +21,15 @@ main =
       log ("Failed to parse the input as an integer: " <> show errs)
 ```
 
-Note that, because `JSON.readJSON` returns `Either MultipleErrors a`, the `Right` pattern match must be explicitly annotated in this case, since there's no other way to infer that we _actually_ want to parse out an `Int` here.
+Note that because `JSON.readJSON` returns `Either MultipleErrors a`, the compiler needs some help inferring that we want to parse out an `Int`.
 
-Writing simple types out as JSON strings is even easier:
+In this case, the pattern match was explicitly annotated as `Right (int :: Int)`, but in practice another function with concrete types being used in this context would help avoid any ambiguous type inference.
+
+## Writing Simple Types
+
+Writing simple types out as JSON strings is even easier. 
+
+The following example renders an integer as "stringified" JSON and then prints it to the console.
 ```hs
 import Prelude
 import Effect (Effect)
@@ -38,15 +42,15 @@ main =
   in log ("Writing the integer: " <> stringifiedInt)
 ```
 
-Reading and writing non-integer simple types is just as easy, just keep in mind that there might not always be enough information available for the compiler to infer _precisely_ what you want to read and write.
+Writing non-integer simple types is just as easy, but it's helpful to keep in mind that there isn't always enough information for the compiler to infer _exactly_ what the type being written is.
 
-When in doubt, annotate the arguments and results of functions as appropriate!
+As was the case before, annotate potentially ambiguous types wherever possible.
 
-## Handling Optionality
+## Handling Optional Values
 
 Simple-JSON provides functions that can deal with the two types of optionality one might encounter when dealing with JSON data: `null` and `undefined`.
 
-To disambiguate between these two cases, Simple-JSON relies on the the `Nullable` newtype to represent fields that might be `null`, and uses the standard `Maybe` type tp represent fields that might be `undefined`.
+To disambiguate between these two cases, Simple-JSON relies on the the `Nullable` newtype to represent fields that might be `null`, and uses the standard `Maybe` type to represent fields that might be `undefined`.
 
 ```hs
 import Prelude
