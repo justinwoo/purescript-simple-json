@@ -90,6 +90,12 @@ read :: forall a
   -> E a
 read = runExcept <<< readImpl
 
+readAsForeign :: forall a b
+   . ReadForeign a
+  => b
+  -> E a
+readAsForeign = read <<< unsafeToForeign
+
 read' :: forall a
   .  ReadForeign a
   => Foreign
