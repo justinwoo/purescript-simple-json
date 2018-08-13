@@ -15,5 +15,6 @@ Pages
 .. toctree::
 
   intro
+  quickstart
   inferred-record-types
   generics-rep

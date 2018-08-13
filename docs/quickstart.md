@@ -1,114 +1,127 @@
 # Quickstart
 
-## Decoding Simple Types
+## Decoding
 
-Simple-JSON can be used to easily decode simple types from JSON, such as numbers, ints, strings, booleans, etc.
+Simple-JSON can be used to easily decode from types that have JSON representations, such as numbers, booleans, strings, arrays, and records.
 
-The following example attempts to decode an integer from the string `"1"` and print it to the console.
+Let's look at an example using a record alias:
+
 ```hs
-import Prelude
-import Data.Either (Either(..))
-import Effect (Effect)
-import Effect.Console
-import Simple.JSON as JSON
-
-main :: Effect Unit
-main =
-  case (JSON.readJSON "1") of
-    Right (int :: Int) -> 
-      log ("Parsed the integer " <> show int)
-    Left errs -> 
-      log ("Failed to parse the input as an integer: " <> show errs)
+type MyRecordAlias =
+  { apple :: String
+  , banana :: Array Int
+  }
 ```
 
-Note that because `JSON.readJSON` returns `Either MultipleErrors a`, the compiler needs some help inferring that we want to decode an `Int` from the given string.
-
-In this case, the pattern match was explicitly annotated as `Right (int :: Int)`, but in practice another function with concrete types being used in this context would help avoid any ambiguous type inference.
-
-## Encoding Simple Types
-
-Encoding simple types to JSON is even easier. 
-
-The following example encodes an integer as "stringified" JSON and then prints it to the console.
-```hs
-import Prelude
-import Effect (Effect)
-import Effect.Console
-import Simple.JSON as JSON
-
-main :: Effect Unit
-main =
-  let stringifiedInt = JSON.writeJSON (1 :: Int)
-  in log ("Writing the integer: " <> stringifiedInt)
-```
-
-Encoding non-integer simple types to JSON is just as easy, but it's helpful to keep in mind that there isn't always enough information for the compiler to infer _exactly_ what the type being written is.
-
-As was the case before, annotate potentially ambiguous types wherever possible.
-
-## Decoding Optional Values
-
-Simple-JSON provides functions that can deal with the two types of optionality one might encounter when dealing with JSON data: `null` and `undefined`.
-
-To disambiguate between these two cases, Simple-JSON relies on the the `Nullable` newtype to represent fields that might be `null`, and uses the standard `Maybe` type to represent fields that might be `undefined`.
+Now we can try decoding some JSON:
 
 ```hs
-import Prelude
-import Data.Either (Either(..))
-import Data.Maybe (Maybe(..))
-import Data.Nullable (Nullable, toMaybe)
-import Effect (Effect)
-import Effect.Console
 import Simple.JSON as JSON
 
-main :: Effect Unit
+testJSON1 :: String
+testJSON1 = """
+{ "apple": "Hello"
+, "banana": [ 1, 2, 3 ]
+}
+"""
+
 main = do
-  let nullInt      :: JSON.E (Nullable Int) = JSON.readJSON "null"
-  let undefinedInt :: JSON.E (Maybe Int)    = JSON.readJSON "undefined"
-  let actualInt    :: JSON.E (Nullable Int) = JSON.readJSON "1"
-  
-  printOptionalInt "Parsed a 'null'"       (toMaybe nullInt)
-  printOptionalInt "Parsed an 'undefined'" undefinedInt
-  printOptionalInt "Parsed a 'null'"       (toMaybe actualInt)
-  
-  where
-    printOptionalInt :: String -> Maybe Int -> Effect Unit
-    printOptionalInt msg = case _ of
-      Right maybeInt -> case maybeInt of
-        Nothing -> msg
-        Just int -> log ("Parsed the integer " <> show int)
-      Left errs -> 
-        log ("Failed to parse the input as an integer: " <> show errs)
+  case JSON.readJSON testJSON1 of
+    Right (r :: MyRecordAlias) -> do
+      assertEqual { expected: r.apple, actual: "Hello"}
+      assertEqual { expected: r.banana, actual: [ 1, 2, 3 ] }
+    Left e -> do
+      assertEqual { expected: "failed", actual: show e }
 ```
 
-Like before, we had to supply explicit type annotations to ensure that the compiler can correctly decode these fields from JSON.
+Since `JSON.readJSON` returns `Either MultipleErrors a`, we need to provide the compiler information on what type the `a` should be. We accomplish this by establishing a concrete type for `a` with the type annotation `r :: MyRecordAlias`, so the return type is now `Either MultipleErrors MyRecordAlias`, which is the same as `Either MultipleErrors  { apple :: String, banana :: Array Int }`.
 
-In the case where we want to decode `null` values, the compiler must resolve the decoded type as a `Nullable`, either through explicit annotation or in the context of another function. 
+And that's it!
 
-After that, the `toMaybe` function from `Data.Nullable` can unwrap it so it can be handled like any other `Maybe` value.
+## Encoding
 
-It's important to understand ahead of time which type of optional values you'll be expecting. Any time that Simple-JSON parses out an `undefined` field when it expects a `null` (or vice versa), the parser will fail and return `MultipleErrors`.
+Encoding JSON is a failure-proof operation, since we know what we want to encode at compile time.
 
-## Encoding Optional Values
-
-Encoding optional values to JSON is, as with encoding simple types, quite a bit easier:
 ```hs
-import Prelude
-import Effect (Effect)
-import Effect.Console
-import Simple.JSON as JSON
-
-main :: Effect Unit
 main = do
-  let nullInt      :: Nullable Int = toNullable Nothing
-  let undefinedInt :: Maybe Int    = Nothing
-  let actualInt    :: Nullable Int = toNullable (Just 1)
+  let
+    myValue =
+      { apple: "Hi"
+      , banana: [ 1, 2, 3 ]
+      } :: MyRecordAlias
 
-  log ("Writing out a 'null' integer: "      <> (JSON.writeJSON nullInt))
-  log ("Writing out an 'undefined integer: " <> (JSON.writeJSON undefinedInt))
-  log ("Writing out an actual ineger: "      <> (JSON.writeJSON actualInt))
+  log (JSON.writeJSON myValue) -- {"banana":[1,2,3],"apple":"Hi"}
 ```
 
-## Dealing with Arrays and PureScript Objects
+And that's all we need to do to encode JSON!
 
-## Reading and Writing PureScript Records
+## Working with Optional values
+
+For most cases, the instance for `Maybe` will do what you want by decoding `undefined` and `null` to `Nothing` and writing `undefined` from `Nothing` (meaning that the JSON output will not contain the field).
+
+```hs
+type WithMaybe =
+  { cherry :: Maybe Boolean
+  }
+
+testJSON3 :: String
+testJSON3 = """
+{ "cherry": true
+}
+"""
+
+testJSON4 :: String
+testJSON4 = """
+{}
+"""
+```
+
+```hs
+main = do
+  case JSON.readJSON testJSON3 of
+    Right (r :: WithMaybe) -> do
+      assertEqual { expected: Just true, actual: r.cherry }
+    Left e -> do
+      assertEqual { expected: "failed", actual: show e }
+
+  case JSON.readJSON testJSON4 of
+    Right (r :: WithMaybe) -> do
+      assertEqual { expected: Nothing, actual: r.cherry }
+    Left e -> do
+      assertEqual { expected: "failed", actual: show e }
+
+  let
+    withJust =
+      { cherry: Just true
+      } :: WithMaybe
+    withNothing =
+      { cherry: Nothing
+      } :: WithMaybe
+
+  log (JSON.writeJSON withJust) -- {"cherry":true}
+  log (JSON.writeJSON withNothing) -- {}
+```
+
+If you explicitly need `null` and not `undefined`, use the `Nullable` type.
+
+```hs
+main =
+  case JSON.readJSON testJSON3 of
+    Right (r :: WithNullable) -> do
+      assertEqual { expected: toNullable (Just true), actual: r.cherry }
+    Left e -> do
+      assertEqual { expected: "failed", actual: show e }
+
+  case JSON.readJSON testJSON4 of
+    Right (r :: WithNullable) -> do
+      assertEqual { expected: "failed", actual: show r }
+    Left e -> do
+      let errors = Array.fromFoldable e
+      assertEqual { expected: [ErrorAtProperty "cherry" (TypeMismatch "Nullable Boolean" "Undefined")], actual: errors }
+
+  let
+    withNullable =
+      { cherry: toNullable Nothing
+      } :: WithNullable
+  log (JSON.writeJSON withNullable) -- {"cherry":null}
+```
