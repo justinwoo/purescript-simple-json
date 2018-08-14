@@ -21,6 +21,7 @@ import Test.Assert (assert)
 import Test.EnumSumGeneric as Test.EnumSumGeneric
 import Test.Generic as Test.Generic
 import Test.Inferred as Test.Inferred
+import Test.Quickstart as Test.Quickstart
 import Type.Proxy (Proxy(..))
 
 type E a = Either MultipleErrors a
@@ -153,3 +154,4 @@ main = do
   Test.Generic.main
   Test.EnumSumGeneric.main
   Test.Inferred.main
+  Test.Quickstart.main
