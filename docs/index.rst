@@ -1,5 +1,5 @@
-PureScript-Simple-JSON Guide
-============================
+PureScript-Simple-JSON Guide and Docs
+=====================================
 
 This is a guide for the PureScript library `Simple-JSON <https://github.com/justinwoo/purescript-simple-json>`_, which provides an easy way to decode either ``Foreign`` (JS) values or JSON ``String`` values with the most "obvious" representation. This guide will also try to guide you through some of the details of how PureScript the language works, as you may be new to PureScript or not know its characteristics.
 
