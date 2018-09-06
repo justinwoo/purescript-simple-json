@@ -172,9 +172,7 @@ instance readRecord ::
   ( RowToList fields fieldList
   , ReadForeignFields fieldList () fields
   ) => ReadForeign (Record fields) where
-  readImpl o = do
-    steps <- getFields fieldListP o
-    pure $ Builder.build steps {}
+  readImpl o = flip Builder.build {} <$> getFields fieldListP o
     where
       fieldListP = RLProxy :: RLProxy fieldList
 
@@ -192,13 +190,11 @@ instance readFieldsCons ::
   , Row.Lacks name from'
   , Row.Cons name ty from' to
   ) => ReadForeignFields (Cons name ty tail) from to where
-  getFields _ obj = do
-    value :: ty <- withExcept' $ readImpl =<< readProp name obj
+  getFields _ obj = ado
+    value <- withExcept' (readImpl =<< readProp name obj)
+    let first = Builder.insert nameP value
     rest <- getFields tailP obj
-    let
-      first :: Builder (Record from') (Record to)
-      first = Builder.insert nameP value
-    pure $ first <<< rest
+    in first <<< rest
     where
       nameP = SProxy :: SProxy name
       tailP = RLProxy :: RLProxy tail
@@ -334,7 +330,7 @@ instance consWriteForeignVariant ::
   , Row.Cons name ty subRow row
   , WriteForeignVariant tail subRow
   ) => WriteForeignVariant (Cons name ty tail) row where
-  writeVariantImpl _ variant = do
+  writeVariantImpl _ variant =
     on
       namep
       writeVariant
