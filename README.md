@@ -4,11 +4,9 @@
 
 A simple Foreign/JSON library based on the Purescript's RowToList feature.
 
-You can learn almost everything you need to know from my slides here:
+Get going quickly with the Quickstart section of the guide: <https://purescript-simple-json.readthedocs.io/en/latest/quickstart.html>
 
-[![](https://i.imgur.com/gzjyTTP.png)](https://speakerdeck.com/justinwoo/easy-json-deserialization-with-simple-json-and-record)
-
-Note that the slides are based on an older version of the library and on PureScript 0.11.6.
+You may also be interested in this presentation about how Simple-JSON works well with PureScript-Record: <https://speakerdeck.com/justinwoo/easy-json-deserialization-with-simple-json-and-record>. Note that the slides are based on an older version of the library and on PureScript 0.11.6, and it is not necessary to understand these slides to get started.
 
 ## Usage
 
