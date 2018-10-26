@@ -113,6 +113,7 @@ parseJSON
   <<< try
   <<< EU.runEffectFn1 _parseJSON
   where
+    -- Nate Faubion: "It uses unsafePerformEffect because that’s the only way to catch exceptions and still use the builtin json decoder"
     runPure = unsafePerformEffect
 
 foreign import _undefined :: Foreign
