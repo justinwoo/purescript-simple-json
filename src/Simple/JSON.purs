@@ -2,10 +2,12 @@ module Simple.JSON
 ( E
 , readJSON
 , readJSON'
+, readJSON_
 , writeJSON
 , write
 , read
 , read'
+, read_
 , parseJSON
 , undefined
 
@@ -30,7 +32,7 @@ import Prelude
 import Control.Alt ((<|>))
 import Control.Monad.Except (ExceptT(..), runExcept, withExcept)
 import Data.Bifunctor (lmap)
-import Data.Either (Either)
+import Data.Either (Either, hush)
 import Data.Identity (Identity(..))
 import Data.Maybe (Maybe(..), maybe)
 import Data.Nullable (Nullable, toMaybe, toNullable)
@@ -71,6 +73,14 @@ readJSON' :: forall a
   -> F a
 readJSON' = readImpl <=< parseJSON
 
+-- | Read a JSON string to a type `a` while returning `Nothing` is the parsing
+-- | failed.
+readJSON_ ::  forall a
+   . ReadForeign a
+  => String
+  -> Maybe a
+readJSON_ = hush <<< readJSON
+
 -- | Write a JSON string from a type `a`.
 writeJSON :: forall a
   .  WriteForeign a
@@ -84,12 +94,14 @@ write :: forall a
   -> Foreign
 write = writeImpl
 
+-- | Read a Foreign value to a type
 read :: forall a
    . ReadForeign a
   => Foreign
   -> E a
 read = runExcept <<< readImpl
 
+-- | Read a value of any type as Foreign to a type
 readAsForeign :: forall a b
    . ReadForeign a
   => b
@@ -101,6 +113,13 @@ read' :: forall a
   => Foreign
   -> F a
 read' = readImpl
+
+-- | Read a Foreign value to a type, as a Maybe of type
+read_ :: forall a
+   . ReadForeign a
+  => Foreign
+  -> Maybe a
+read_ = hush <<< read
 
 foreign import _parseJSON :: EU.EffectFn1 String Foreign
 
