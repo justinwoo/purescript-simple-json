@@ -210,12 +210,12 @@ instance readFieldsCons ::
   , Row.Lacks name from'
   , Row.Cons name ty from' to
   ) => ReadForeignFields (Cons name ty tail) from to where
-  getFields _ obj = ado
-    value <- withExcept' (readImpl =<< readProp name obj)
-    let first = Builder.insert nameP value
-    rest <- getFields tailP obj
-    in first <<< rest
+  getFields _ obj = compose <$> first <*> rest
     where
+      first = do
+        value <- withExcept' (readImpl =<< readProp name obj)
+        pure $ Builder.insert nameP value
+      rest = getFields tailP obj
       nameP = SProxy :: SProxy name
       tailP = RLProxy :: RLProxy tail
       name = reflectSymbol nameP
