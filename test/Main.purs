@@ -5,7 +5,7 @@ import Prelude
 import Control.Monad.Except (runExcept)
 import Data.Bifunctor (lmap)
 import Data.Either (Either(..), either, fromLeft, isRight)
-import Data.List (List(..))
+import Data.List (List(..), (:))
 import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe)
 import Data.NonEmpty (NonEmpty(..))
@@ -17,7 +17,7 @@ import Foreign (Foreign, ForeignError(..), MultipleErrors)
 import Foreign.Object (Object)
 import Partial.Unsafe (unsafePartial)
 import Simple.JSON (class ReadForeign, class WriteForeign, parseJSON, readJSON, writeJSON)
-import Test.Assert (assert)
+import Test.Assert (assertEqual)
 import Test.EnumSumGeneric as Test.EnumSumGeneric
 import Test.Generic as Test.Generic
 import Test.Inferred as Test.Inferred
@@ -88,9 +88,9 @@ roundtrips _ enc0 = do
       enc2 = either (const "bad2") writeJSON dec1
   when (enc1 /= enc2) $ throw enc0
 
-shouldEqual :: forall a . Eq a => a -> a -> Effect Unit
+shouldEqual :: forall a . Eq a => Show a => a -> a -> Effect Unit
 shouldEqual a b =
-  assert (a == b)
+  assertEqual { actual: a, expected: b}
 
 main :: Effect Unit
 main = do
@@ -99,7 +99,7 @@ main = do
   -- "fails with invalid JSON"
   let r1 = readJSON """{ "c": 1, "d": 2}"""
   (unsafePartial $ fromLeft r1) `shouldEqual`
-    (NonEmptyList (NonEmpty (ErrorAtProperty "a" (TypeMismatch "Int" "Undefined")) Nil))
+    (NonEmptyList (NonEmpty (ErrorAtProperty "a" (TypeMismatch "Int" "Undefined")) ((ErrorAtProperty "b" (TypeMismatch "String" "Undefined")) : (ErrorAtProperty "c" (TypeMismatch "Boolean" "Number")) : (ErrorAtProperty "d" (TypeMismatch "array" "Number")) : Nil)))
   isRight (r1 :: E MyTest) `shouldEqual` false
 
   -- "works with missing Maybe fields by setting them to Nothing"

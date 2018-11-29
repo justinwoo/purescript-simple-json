@@ -30,14 +30,15 @@ module Simple.JSON
 import Prelude
 
 import Control.Alt ((<|>))
-import Control.Monad.Except (ExceptT(..), runExcept, withExcept)
+import Control.Monad.Except (ExceptT(..), runExcept, runExceptT, withExcept)
 import Data.Bifunctor (lmap)
-import Data.Either (Either, hush)
+import Data.Either (Either, either, hush)
 import Data.Identity (Identity(..))
 import Data.Maybe (Maybe(..), maybe)
 import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
 import Data.Traversable (sequence, traverse)
+import Data.Validation.Semigroup (V, invalid, toEither)
 import Data.Variant (Variant, inj, on)
 import Effect.Exception (message, try)
 import Effect.Uncurried as EU
@@ -210,7 +211,7 @@ instance readFieldsCons ::
   , Row.Lacks name from'
   , Row.Cons name ty from' to
   ) => ReadForeignFields (Cons name ty tail) from to where
-  getFields _ obj = compose <$> first <*> rest
+  getFields _ obj = (compose <$> first) `exceptTApply` rest
     where
       first = do
         value <- withExcept' (readImpl =<< readProp name obj)
@@ -220,6 +221,15 @@ instance readFieldsCons ::
       tailP = RLProxy :: RLProxy tail
       name = reflectSymbol nameP
       withExcept' = withExcept <<< map $ ErrorAtProperty name
+
+exceptTApply :: forall a b e m. Semigroup e => Applicative m => ExceptT e m (a -> b) -> ExceptT e m a -> ExceptT e m b
+exceptTApply fun a = ExceptT $ ado
+  fun' :: Either e (a -> b) <- runExceptT fun
+  a' :: (Either e a) <- runExceptT a
+  in toEither (apply (fromEither fun') (fromEither a'))
+
+fromEither :: forall e a. Semigroup e => Either e a -> V e a
+fromEither = either invalid pure
 
 instance readFieldsNil ::
   ReadForeignFields Nil () () where
