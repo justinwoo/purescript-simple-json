@@ -32,13 +32,12 @@ import Prelude
 import Control.Alt ((<|>))
 import Control.Monad.Except (ExceptT(..), runExcept, runExceptT, withExcept)
 import Data.Bifunctor (lmap)
-import Data.Either (Either, either, hush)
+import Data.Either (Either(..), hush)
 import Data.Identity (Identity(..))
 import Data.Maybe (Maybe(..), maybe)
 import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
 import Data.Traversable (sequence, traverse)
-import Data.Validation.Semigroup (V, invalid, toEither)
 import Data.Variant (Variant, inj, on)
 import Effect.Exception (message, try)
 import Effect.Uncurried as EU
@@ -226,10 +225,13 @@ exceptTApply :: forall a b e m. Semigroup e => Applicative m => ExceptT e m (a -
 exceptTApply fun a = ExceptT $ ado
   fun' :: Either e (a -> b) <- runExceptT fun
   a' :: (Either e a) <- runExceptT a
-  in toEither (apply (fromEither fun') (fromEither a'))
+  in applyEither fun' a'
 
-fromEither :: forall e a. Semigroup e => Either e a -> V e a
-fromEither = either invalid pure
+applyEither :: forall e a b. Semigroup e => Either e (a -> b) -> Either e a -> Either e b
+applyEither (Left e) (Right _) = Left e
+applyEither (Left e1) (Left e2) = Left (e1 <> e2)
+applyEither (Right _) (Left e) = Left e
+applyEither (Right fun) (Right a) = Right (fun a)
 
 instance readFieldsNil ::
   ReadForeignFields Nil () () where

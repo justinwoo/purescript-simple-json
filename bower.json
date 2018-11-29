@@ -20,8 +20,7 @@
     "purescript-foreign-object": "^1.0.0",
     "purescript-globals": "^4.0.0",
     "purescript-foreign": "^5.0.0",
-    "purescript-exceptions": "^4.0.0",
-    "purescript-validation": "^4.0.0"
+    "purescript-exceptions": "^4.0.0"
   },
   "devDependencies": {
     "purescript-assert": "^4.0.0",
