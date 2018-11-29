@@ -222,10 +222,9 @@ instance readFieldsCons ::
       withExcept' = withExcept <<< map $ ErrorAtProperty name
 
 exceptTApply :: forall a b e m. Semigroup e => Applicative m => ExceptT e m (a -> b) -> ExceptT e m a -> ExceptT e m b
-exceptTApply fun a = ExceptT $ ado
-  fun' :: Either e (a -> b) <- runExceptT fun
-  a' :: (Either e a) <- runExceptT a
-  in applyEither fun' a'
+exceptTApply fun a = ExceptT $ applyEither
+  <$> runExceptT fun
+  <*> runExceptT a
 
 applyEither :: forall e a b. Semigroup e => Either e (a -> b) -> Either e a -> Either e b
 applyEither (Left e) (Right _) = Left e
