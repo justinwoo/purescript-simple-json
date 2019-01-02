@@ -28,3 +28,7 @@ There are a few factors involved here:
 3. I would rather give you the tools to write your own so that you have instances that match what you are using by having docs/guides like in this page: <https://purescript-simple-json.readthedocs.io/en/latest/generics-rep.html>
 
 4. There doesn't seem to be anyone else making a general solution library and publishing it.
+
+## I just want some random encoding for my Sum types!
+
+If you really are sure you don't want to use the existing instances for [Variant](https://pursuit.purescript.org/packages/purescript-variant/5.0.0/docs/Data.Variant#t:Variant) (from [purescript-variant](https://github.com/natefaubion/purescript-variant)), you can use the code from here: <https://github.com/justinwoo/purescript-simple-json-generics>
