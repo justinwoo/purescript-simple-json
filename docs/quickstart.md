@@ -1,6 +1,6 @@
 # Quickstart
 
-## Decoding
+## Decoding / Reading JSON
 
 Simple-JSON can be used to easily decode from types that have JSON representations, such as numbers, booleans, strings, arrays, and records.
 
@@ -38,7 +38,7 @@ Since `JSON.readJSON` returns `Either MultipleErrors a`, we need to provide the 
 
 And that's it!
 
-## Encoding
+## Encoding / Writing JSON
 
 Encoding JSON is a failure-proof operation, since we know what we want to encode at compile time.
 
