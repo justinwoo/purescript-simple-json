@@ -19,3 +19,4 @@ Pages
   inferred-record-types
   with-affjax
   generics-rep
+  faq

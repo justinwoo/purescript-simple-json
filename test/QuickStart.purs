@@ -50,6 +50,12 @@ type WithNullable =
   { cherry :: Nullable Boolean
   }
 
+newtype FancyInt = FancyInt Int
+derive newtype instance eqFancyInt :: Eq FancyInt
+derive newtype instance showFancyInt :: Show FancyInt
+derive newtype instance readForeignFancyInt :: JSON.ReadForeign FancyInt
+derive newtype instance writeForeignFancyInt :: JSON.WriteForeign FancyInt
+
 main :: Effect Unit
 main = do
   case JSON.readJSON testJSON1 of
@@ -115,3 +121,10 @@ main = do
       { cherry: toNullable Nothing
       } :: WithNullable
   log (JSON.writeJSON withNullable) -- {"cherry":null}
+
+  case JSON.readJSON "1" of
+    Right fancyInt@(FancyInt i) -> do
+      assertEqual { expected: FancyInt 1, actual: fancyInt }
+      assertEqual { expected: 1, actual: i }
+    Left e -> do
+      assertEqual { expected: "failed", actual: show e }
