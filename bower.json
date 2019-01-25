@@ -12,18 +12,18 @@
     "output"
   ],
   "dependencies": {
-    "purescript-prelude": "^4.0.0",
-    "purescript-typelevel-prelude": "^3.0.0",
+    "purescript-prelude": "^4.1.0",
+    "purescript-typelevel-prelude": "^4.0.0",
     "purescript-record": "^1.0.0",
-    "purescript-variant": "^5.0.0",
-    "purescript-nullable": "^4.0.0",
-    "purescript-foreign-object": "^1.0.0",
+    "purescript-variant": "^5.2.0",
+    "purescript-nullable": "^4.1.1",
+    "purescript-foreign-object": "^1.1.0",
     "purescript-globals": "^4.0.0",
     "purescript-foreign": "^5.0.0",
     "purescript-exceptions": "^4.0.0"
   },
   "devDependencies": {
     "purescript-assert": "^4.0.0",
-    "purescript-generics-rep": "^6.0.0"
+    "purescript-generics-rep": "^6.1.0"
   }
 }
