@@ -6,7 +6,7 @@ There is an issue that discusses how usage with Affjax goes here: <https://githu
 
 In short, you can use the String response format for the request:
 
-```purs
+```hs
 -- from https://github.com/justinwoo/purescript-simple-json/issues/51#issuecomment-421457861
 
 -- (your regular code need not be this long)
