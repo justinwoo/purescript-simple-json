@@ -73,7 +73,7 @@ readJSON' :: forall a
   -> F a
 readJSON' = readImpl <=< parseJSON
 
--- | Read a JSON string to a type `a` while returning `Nothing` is the parsing
+-- | Read a JSON string to a type `a` while returning `Nothing` if the parsing
 -- | failed.
 readJSON_ ::  forall a
    . ReadForeign a
