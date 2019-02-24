@@ -4,29 +4,31 @@ There is an issue that discusses how usage with Affjax goes here: <https://githu
 
 ## Manually
 
-In short, you can use the String response format for the request:
+In short, you can use the `string` response format for the request:
 
 ```hs
--- from https://github.com/justinwoo/purescript-simple-json/issues/51#issuecomment-421457861
+import Prelude
 
--- (your regular code need not be this long)
+import Affjax (get)
+import Affjax.ResponseFormat (ResponseFormatError(..), string)
+import Data.Bifunctor (lmap)
+import Data.Either (Either(..))
+import Data.List.NonEmpty (singleton)
+import Effect.Aff (launchAff_)
+import Effect.Class.Console (log)
+import Simple.JSON (readJSON)
+
+type MyRecordAlias = { userId :: Int }
+
 main = void $ launchAff_ $ do
-  res <- AX.request (
-    AX.defaultRequest
-    {
-      url = "https://jsonplaceholder.typicode.com/todos/1",
-      method = Left GET,
-      responseFormat = ResponseFormat.string -- String ResponseFormat specified here
-    }
-  )
- let body = bimap transfomError identity res.body
-  case res.body >>= JSON.readJSON  of -- then String JSON can be used with readJSON
+  res <- get string "https://jsonplaceholder.typicode.com/todos/1"
+  case lmap transformError res.body >>= readJSON of
     Right (r :: MyRecordAlias) -> do
       log "all good"
     Left e -> do
       log "all bad"
 
-transformError (ResponseFormat.ResponseFormatError e _) = cons' e Nil
+transformError (ResponseFormatError e _) = singleton e
 ```
 
 ## With Simple-Ajax
