@@ -55,7 +55,7 @@ readRecordWithEitherJSON s = runExcept do
   pure $ inter { banana = banana }
 ```
 
-So that goes on here is that since the result of the function is our `RecordWithEither` with a field of `banana :: Either Int String`, the type is inferred "going backwards", so with the application of our function that is now concretely typed in this context as `readEitherImpl :: Foreign -> Foreign.F (Either Int String)`, the `inter` is read in as `{ apple :: Int, banana :: Foreign }`.
+So what goes on here is that since the result of the function is our `RecordWithEither` with a field of `banana :: Either Int String`, the type is inferred "going backwards", so with the application of our function that is now concretely typed in this context as `readEitherImpl :: Foreign -> Foreign.F (Either Int String)`, the `inter` is read in as `{ apple :: Int, banana :: Foreign }`.
 
 In this case, we used record update syntax to modify our inferred record, but we also could have done this generically using `Record.modify` from the [Record](https://pursuit.purescript.org/packages/purescript-record) library.
 
