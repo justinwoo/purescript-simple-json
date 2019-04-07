@@ -32,3 +32,18 @@ There are a few factors involved here:
 ## I just want some random encoding for my Sum types!
 
 If you really are sure you don't want to use the existing instances for [Variant](https://pursuit.purescript.org/packages/purescript-variant/5.0.0/docs/Data.Variant#t:Variant) (from [purescript-variant](https://github.com/natefaubion/purescript-variant)), you can use the code from here: <https://github.com/justinwoo/purescript-simple-json-generics>
+
+You might also choose to use this library: <https://github.com/justinwoo/purescript-kishimen>
+
+## How do I handle keys that aren't lower case?
+
+PureScript record labels can be quoted.
+
+```purs
+type MyRecord =
+  { "Apple" :: String }
+  
+fn :: MyRecord -> String
+fn myRecordValue =
+  myRecordValue."Apple"
+```
