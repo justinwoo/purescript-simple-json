@@ -38,6 +38,7 @@ import Data.Maybe (Maybe(..), maybe)
 import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
 import Data.Traversable (sequence, traverse)
+import Data.TraversableWithIndex (traverseWithIndex)
 import Data.Variant (Variant, inj, on)
 import Effect.Exception (message, try)
 import Effect.Uncurried as EU
@@ -163,7 +164,9 @@ instance readBoolean :: ReadForeign Boolean where
   readImpl = readBoolean
 
 instance readArray :: ReadForeign a => ReadForeign (Array a) where
-  readImpl = traverse readImpl <=< readArray
+  readImpl = traverseWithIndex readAtIdx <=< readArray
+    where
+      readAtIdx i f = withExcept (map (ErrorAtIndex i)) (readImpl f)
 
 instance readMaybe :: ReadForeign a => ReadForeign (Maybe a) where
   readImpl = readNullOrUndefined readImpl
