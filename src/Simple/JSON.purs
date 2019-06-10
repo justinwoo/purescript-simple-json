@@ -30,10 +30,12 @@ module Simple.JSON
 import Prelude
 
 import Control.Alt ((<|>))
-import Control.Monad.Except (ExceptT(..), runExcept, runExceptT, withExcept)
+import Control.Monad.Except (ExceptT(..), except, runExcept, runExceptT, withExcept)
+import Data.Array.NonEmpty (NonEmptyArray, fromArray, toArray)
 import Data.Bifunctor (lmap)
-import Data.Either (Either(..), hush)
+import Data.Either (Either(..), hush, note)
 import Data.Identity (Identity(..))
+import Data.List.NonEmpty (singleton)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
@@ -376,3 +378,11 @@ instance consWriteForeignVariant ::
       { type: reflectSymbol namep
       , value: writeImpl value
       }
+
+instance readForeignNEArray :: ReadForeign a => ReadForeign (NonEmptyArray a) where
+  readImpl f = do
+    raw :: Array a <- readImpl f
+    except $ note (singleton $ ForeignError "Nonempty array expected, got empty array") $ fromArray raw
+
+instance writeForeignNEArray :: WriteForeign a => WriteForeign (NonEmptyArray a) where
+  writeImpl a = writeImpl <<< toArray $ a
