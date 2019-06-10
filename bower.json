@@ -17,7 +17,7 @@
     "purescript-record": "^2.0.1",
     "purescript-variant": "^6.0.1",
     "purescript-nullable": "^4.1.1",
-    "purescript-foreign-object": "^2.0.2",
+    "purescript-foreign-object": "^2.0.3",
     "purescript-globals": "^4.0.0",
     "purescript-foreign": "^5.0.0",
     "purescript-exceptions": "^4.0.0",
