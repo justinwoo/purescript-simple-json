@@ -147,7 +147,7 @@ main = do
 
   -- "works with Variant"
   roundtrips (Proxy :: Proxy MyTestVariant) """
-    { "type": "b", "value": 123  }
+    { "b": 123  }
   """
 
   -- run examples
