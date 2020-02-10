@@ -264,14 +264,9 @@ instance readVariantCons ::
   , Row.Cons name ty trash row
   , ReadForeignVariant tail row
   ) => ReadForeignVariant (Cons name ty tail) row where
-  readVariantImpl _ o = do
-    obj :: { type :: String, value :: Foreign } <- readImpl o
-    if obj.type == name
-      then do
-        value :: ty <- readImpl obj.value
-        pure $ inj namep value
-      else
-        (fail <<< ForeignError $ "Did not match variant tag " <> name)
+  readVariantImpl _ o =
+    do value :: ty <- readImpl =<< readProp name o
+       pure $ inj namep value
     <|> readVariantImpl (RLProxy :: RLProxy tail) o
     where
       namep = SProxy :: SProxy name
@@ -374,10 +369,8 @@ instance consWriteForeignVariant ::
       variant
     where
     namep = SProxy :: SProxy name
-    writeVariant value = unsafeToForeign
-      { type: reflectSymbol namep
-      , value: writeImpl value
-      }
+    name = reflectSymbol namep
+    writeVariant value = unsafeToForeign $ Object.insert name (writeImpl value) Object.empty
 
 instance readForeignNEArray :: ReadForeign a => ReadForeign (NonEmptyArray a) where
   readImpl f = do
