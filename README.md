@@ -1,6 +1,7 @@
 # Purescript-Simple-JSON
 
-[![Build Status](https://travis-ci.org/justinwoo/purescript-simple-json.svg?branch=master)](https://travis-ci.org/justinwoo/purescript-simple-json) [![Documentation Status](https://readthedocs.org/projects/purescript-simple-json/badge/?version=latest)](https://purescript-simple-json.readthedocs.io/en/latest)
+[<img alt="build status" src="https://img.shields.io/github/workflow/status/justinwoo/purescript-simple-json/ci?logo=github&style=for-the-badge" height="20">](https://github.com/justinwoo/purescript-simple-json/actions?query=workflow%3Aci)
+[<img alt="documentation status" src="https://img.shields.io/readthedocs/purescript-simple-json/latest?logo=read-the-docs&style=for-the-badge" height="20">](https://readthedocs.org/projects/purescript-simple-json/badge/?version=latest)
 
 A simple Foreign/JSON library based on the Purescript's RowToList feature.
 

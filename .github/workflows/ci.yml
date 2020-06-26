@@ -1,0 +1,12 @@
+name: ci
+
+# Run the workflow on any pushes or PRs.
+on: [push, pull_request]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: cachix/install-nix-action@v10
+      - run: ./test.bash
