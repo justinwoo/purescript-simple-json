@@ -10,6 +10,7 @@ import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe)
 import Data.NonEmpty (NonEmpty(..))
 import Data.Nullable (Nullable)
+import Data.Tuple.Nested (type (/\))
 import Data.Variant (Variant)
 import Effect (Effect)
 import Effect.Exception (throw)
@@ -73,6 +74,10 @@ type MyTestVariant = Variant
   , b :: Int
   )
 
+type MyTestTuple =
+  Int /\ String /\ Boolean /\ Char /\ Array Int
+
+
 roundtrips :: forall a. ReadForeign a => WriteForeign a => Proxy a -> String -> Effect Unit
 roundtrips _ enc0 = do
   let parseJSON' = lmap show <<< runExcept <<< parseJSON
@@ -114,6 +119,41 @@ main = do
     (NonEmptyList (NonEmpty (ErrorAtProperty "b" (TypeMismatch "Nullable String" "Undefined")) Nil))
   (isRight (r3 :: E MyTestNullable)) `shouldEqual` false
 
+  let r4 = readJSON """
+    [ 1, "test", 1, "a", [ 1 ] ]
+  """
+  (unsafePartial $ fromLeft r4) `shouldEqual`
+    (NonEmptyList (NonEmpty (ErrorAtIndex 2 (TypeMismatch "Boolean" "Number")) Nil))
+  isRight (r4 :: E MyTestTuple) `shouldEqual` false
+
+  let r5 = readJSON """
+    [ 1, "test", true, "a", [ 1 ], null ]
+  """
+  (unsafePartial $ fromLeft r5) `shouldEqual`
+    (NonEmptyList (NonEmpty (TypeMismatch "array of length 5" "array of length 6") Nil))
+  isRight (r5 :: E MyTestTuple) `shouldEqual` false
+
+  let r6 = readJSON """
+    [ 1, "test", true, "a" ]
+  """
+  (unsafePartial $ fromLeft r6) `shouldEqual`
+    (NonEmptyList (NonEmpty (TypeMismatch "array of length 5" "array of length 4") Nil))
+  isRight (r6 :: E MyTestTuple) `shouldEqual` false
+
+  let r7 = readJSON """
+    [ 1 ]
+  """
+  (unsafePartial $ fromLeft r7) `shouldEqual`
+    (NonEmptyList (NonEmpty (TypeMismatch "array of length 5" "array of length 1") Nil))
+  isRight (r7 :: E MyTestTuple) `shouldEqual` false
+
+  let r8 = readJSON """
+    []
+  """
+  (unsafePartial $ fromLeft r8) `shouldEqual`
+    (NonEmptyList (NonEmpty (TypeMismatch "array of length 5" "array of length 0") Nil))
+  isRight (r8 :: E MyTestTuple) `shouldEqual` false
+
   -- roundtrips
   -- "works with proper JSON"
   roundtrips (Proxy :: Proxy MyTest) """
@@ -148,6 +188,10 @@ main = do
   -- "works with Variant"
   roundtrips (Proxy :: Proxy MyTestVariant) """
     { "type": "b", "value": 123  }
+  """
+
+  roundtrips (Proxy :: Proxy MyTestTuple) """
+    [ 1, "test", true, "a", [ 1 ] ]
   """
 
   -- run examples
