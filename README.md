@@ -51,3 +51,7 @@ Please see this page in the guide: <https://purescript-simple-json.readthedocs.i
 ### Why won't you accept my Pull Request?
 
 Please read this appeal from another open source author: <https://github.com/benbjohnson/litestream#open-source-not-open-contribution>
+
+### How should I actually use this library?
+
+James Brock has informed me that people still do not understand that this library should be used not as a library. If you do not like any of the behavior in this library or would like to opt out of some behaviors, you should copy this library into your own codebase. Please see that this libraries does not actually contain many lines of code and you should be able to learn how to construct this library from scratch with a few days of reading.
