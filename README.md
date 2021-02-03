@@ -47,3 +47,7 @@ Please see this page in the guide: <https://purescript-simple-json.readthedocs.i
 ### How do I work with `data` Types?
 
 Please see this page in the guide: <https://purescript-simple-json.readthedocs.io/en/latest/generics-rep.html>
+
+### Why won't you accept my Pull Request?
+
+Please read this appeal from another open source author: <https://github.com/benbjohnson/litestream#open-source-not-open-contribution>
