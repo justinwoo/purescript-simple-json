@@ -49,7 +49,6 @@ import Foreign (F, Foreign, ForeignError(..), MultipleErrors, fail, isNull, isUn
 import Foreign.Index (readProp)
 import Foreign.Object (Object)
 import Foreign.Object as Object
-import Global.Unsafe (unsafeStringify)
 import Partial.Unsafe (unsafeCrashWith)
 import Prim.Row as Row
 import Prim.RowList (class RowToList, Cons, Nil, kind RowList)
@@ -89,7 +88,7 @@ writeJSON :: forall a
   .  WriteForeign a
   => a
   -> String
-writeJSON = unsafeStringify <<< writeImpl
+writeJSON = _stringifyJSON <<< writeImpl
 
 write :: forall a
   .  WriteForeign a
@@ -137,6 +136,8 @@ parseJSON
   where
     -- Nate Faubion: "It uses unsafePerformEffect because that’s the only way to catch exceptions and still use the builtin json decoder"
     runPure = unsafePerformEffect
+
+foreign import _stringifyJSON :: forall a. a -> String
 
 foreign import _undefined :: Foreign
 
