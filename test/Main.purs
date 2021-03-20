@@ -4,7 +4,7 @@ import Prelude
 
 import Control.Monad.Except (runExcept)
 import Data.Bifunctor (lmap)
-import Data.Either (Either(..), either, fromLeft, isRight)
+import Data.Either (Either(..), either, isRight)
 import Data.List (List(..), (:))
 import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe)
@@ -15,7 +15,6 @@ import Effect (Effect)
 import Effect.Exception (throw)
 import Foreign (Foreign, ForeignError(..), MultipleErrors)
 import Foreign.Object (Object)
-import Partial.Unsafe (unsafePartial)
 import Simple.JSON (class ReadForeign, class WriteForeign, parseJSON, readJSON, writeJSON)
 import Test.Assert (assertEqual)
 import Test.EnumSumGeneric as Test.EnumSumGeneric
@@ -98,8 +97,8 @@ main = do
 
   -- "fails with invalid JSON"
   let r1 = readJSON """{ "c": 1, "d": 2}"""
-  (unsafePartial $ fromLeft r1) `shouldEqual`
-    (NonEmptyList (NonEmpty (ErrorAtProperty "a" (TypeMismatch "Int" "Undefined")) ((ErrorAtProperty "b" (TypeMismatch "String" "Undefined")) : (ErrorAtProperty "c" (TypeMismatch "Boolean" "Number")) : (ErrorAtProperty "d" (TypeMismatch "array" "Number")) : Nil)))
+  r1 `shouldEqual`
+    (Left (NonEmptyList (NonEmpty (ErrorAtProperty "a" (TypeMismatch "Int" "Undefined")) ((ErrorAtProperty "b" (TypeMismatch "String" "Undefined")) : (ErrorAtProperty "c" (TypeMismatch "Boolean" "Number")) : (ErrorAtProperty "d" (TypeMismatch "array" "Number")) : Nil))))
   isRight (r1 :: E MyTest) `shouldEqual` false
 
   -- "works with missing Maybe fields by setting them to Nothing"
@@ -110,8 +109,8 @@ main = do
   let r3 = readJSON """
     { "a": "asdf" }
   """
-  (unsafePartial $ fromLeft r3) `shouldEqual`
-    (NonEmptyList (NonEmpty (ErrorAtProperty "b" (TypeMismatch "Nullable String" "Undefined")) Nil))
+  r3 `shouldEqual`
+    (Left (NonEmptyList (NonEmpty (ErrorAtProperty "b" (TypeMismatch "Nullable String" "Undefined")) Nil)))
   (isRight (r3 :: E MyTestNullable)) `shouldEqual` false
 
   -- roundtrips

@@ -6,7 +6,7 @@ import Control.Alt ((<|>))
 import Control.Monad.Except (throwError)
 import Data.Either (Either, isRight)
 import Data.Generic.Rep (class Generic, Constructor(..), NoArguments(..), Sum(..), to)
-import Data.Generic.Rep.Show (genericShow)
+import Data.Show.Generic (genericShow)
 import Effect (Effect)
 import Foreign (Foreign)
 import Foreign as Foreign
