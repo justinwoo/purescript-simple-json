@@ -84,8 +84,7 @@ readJSON_ ::  forall a
   -> Maybe a
 readJSON_ = hush <<< readJSON
 
--- | Uses the global JSON object to turn anything into a string. Careful! Trying
--- | to serialize functions returns undefined
+-- | JSON.stringify
 foreign import _unsafeStringify :: forall a. a -> String
 
 unsafeStringify :: forall a. a -> String
