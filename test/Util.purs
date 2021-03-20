@@ -3,7 +3,7 @@ module Test.Util where
 import Prelude
 
 import Prim.Row as Row
-import Prim.RowList (class RowToList, Cons, Nil, kind RowList)
+import Prim.RowList (class RowToList, Cons, Nil, RowList)
 import Record (get)
 import Type.Prelude (class IsSymbol, RLProxy(..), SProxy(..))
 
@@ -17,7 +17,7 @@ equal
   -> Boolean
 equal a b = equalFields (RLProxy :: RLProxy rs) a b
 
-class EqualFields (rs :: RowList) (row :: # Type) | rs -> row where
+class EqualFields (rs :: RowList Type) (row :: Row Type) | rs -> row where
   equalFields :: RLProxy rs -> Record row -> Record row -> Boolean
 
 instance equalFieldsCons
