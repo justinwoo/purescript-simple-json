@@ -56,7 +56,7 @@ import Prim.RowList (class RowToList, Cons, Nil, RowList)
 import Record (get)
 import Record.Builder (Builder)
 import Record.Builder as Builder
-import Type.Prelude (RLProxy(..))
+import Type.Prelude (Proxy(..))
 
 -- | An alias for the Either result of decoding
 type E a = Either MultipleErrors a
@@ -206,12 +206,12 @@ instance readRecord ::
   ) => ReadForeign (Record fields) where
   readImpl o = flip Builder.build {} <$> getFields fieldListP o
     where
-      fieldListP = RLProxy :: RLProxy fieldList
+      fieldListP = Proxy :: Proxy fieldList
 
 -- | A class for reading foreign values from properties
 class ReadForeignFields (xs :: RowList Type) (from :: Row Type) (to :: Row Type)
   | xs -> from to where
-  getFields :: RLProxy xs
+  getFields :: Proxy xs
     -> Foreign
     -> F (Builder (Record from) (Record to))
 
@@ -229,7 +229,7 @@ instance readFieldsCons ::
         pure $ Builder.insert nameP value
       rest = getFields tailP obj
       nameP = SProxy :: SProxy name
-      tailP = RLProxy :: RLProxy tail
+      tailP = Proxy :: Proxy tail
       name = reflectSymbol nameP
       withExcept' = withExcept <<< map $ ErrorAtProperty name
 
@@ -253,11 +253,11 @@ instance readForeignVariant ::
   ( RowToList variants rl
   , ReadForeignVariant rl variants
   ) => ReadForeign (Variant variants) where
-  readImpl o = readVariantImpl (RLProxy :: RLProxy rl) o
+  readImpl o = readVariantImpl (Proxy :: Proxy rl) o
 
 class ReadForeignVariant (xs :: RowList Type) (row :: Row Type)
   | xs -> row where
-  readVariantImpl :: RLProxy xs
+  readVariantImpl :: Proxy xs
     -> Foreign
     -> F (Variant row)
 
@@ -279,7 +279,7 @@ instance readVariantCons ::
         pure $ inj namep value
       else
         (fail <<< ForeignError $ "Did not match variant tag " <> name)
-    <|> readVariantImpl (RLProxy :: RLProxy tail) o
+    <|> readVariantImpl (Proxy :: Proxy tail) o
     where
       namep = SProxy :: SProxy name
       name = reflectSymbol namep
@@ -325,7 +325,7 @@ instance recordWriteForeign ::
   ) => WriteForeign (Record row) where
   writeImpl rec = unsafeToForeign $ Builder.build steps {}
     where
-      rlp = RLProxy :: RLProxy rl
+      rlp = Proxy :: Proxy rl
       steps = writeImplFields rlp rec
 
 class WriteForeignFields (rl :: RowList Type) row (from :: Row Type) (to :: Row Type)
@@ -344,7 +344,7 @@ instance consWriteForeignFields ::
     where
       namep = SProxy :: SProxy name
       value = writeImpl $ get namep rec
-      tailp = RLProxy :: RLProxy tail
+      tailp = Proxy :: Proxy tail
       rest = writeImplFields tailp rec
       result = Builder.insert namep value <<< rest
 instance nilWriteForeignFields ::
@@ -355,7 +355,7 @@ instance writeForeignVariant ::
   ( RowToList row rl
   , WriteForeignVariant rl row
   ) => WriteForeign (Variant row) where
-  writeImpl variant = writeVariantImpl (RLProxy :: RLProxy rl) variant
+  writeImpl variant = writeVariantImpl (Proxy :: Proxy rl) variant
 
 class WriteForeignVariant (rl :: RowList Type) (row :: Row Type)
   | rl -> row where
@@ -377,7 +377,7 @@ instance consWriteForeignVariant ::
     on
       namep
       writeVariant
-      (writeVariantImpl (RLProxy :: RLProxy tail))
+      (writeVariantImpl (Proxy :: Proxy tail))
       variant
     where
     namep = SProxy :: SProxy name
