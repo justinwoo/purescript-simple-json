@@ -12,19 +12,17 @@
     "output"
   ],
   "dependencies": {
-    "purescript-prelude": "^4.1.1",
-    "purescript-typelevel-prelude": "^5.0.0",
-    "purescript-record": "^2.0.1",
-    "purescript-variant": "^6.0.1",
-    "purescript-nullable": "^4.1.1",
-    "purescript-foreign-object": "^2.0.3",
-    "purescript-globals": "^4.0.0",
-    "purescript-foreign": "^5.0.0",
-    "purescript-exceptions": "^4.0.0",
-    "purescript-arrays": "^5.3.0"
+    "purescript-prelude": "^5.0.0",
+    "purescript-typelevel-prelude": "^6.0.0",
+    "purescript-record": "^3.0.0",
+    "purescript-variant": "^7.0.1",
+    "purescript-nullable": "^5.0.0",
+    "purescript-foreign-object": "^3.0.0",
+    "purescript-foreign": "^6.0.0",
+    "purescript-exceptions": "^5.0.0",
+    "purescript-arrays": "^6.0.0"
   },
   "devDependencies": {
-    "purescript-assert": "^4.1.0",
-    "purescript-generics-rep": "^6.1.1"
+    "purescript-assert": "^5.0.0"
   }
 }

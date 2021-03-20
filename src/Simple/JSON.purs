@@ -49,10 +49,9 @@ import Foreign (F, Foreign, ForeignError(..), MultipleErrors, fail, isNull, isUn
 import Foreign.Index (readProp)
 import Foreign.Object (Object)
 import Foreign.Object as Object
-import Global.Unsafe (unsafeStringify)
 import Partial.Unsafe (unsafeCrashWith)
 import Prim.Row as Row
-import Prim.RowList (class RowToList, Cons, Nil, kind RowList)
+import Prim.RowList (class RowToList, Cons, Nil, RowList)
 import Record (get)
 import Record.Builder (Builder)
 import Record.Builder as Builder
@@ -84,12 +83,25 @@ readJSON_ ::  forall a
   -> Maybe a
 readJSON_ = hush <<< readJSON
 
+-- TODO: Should we keep using JSON.stringify or replace it
+--       with something else?
+--       unsafeStringify used to be a part of
+--       purescript-globals which was recently deprecated.
+--       Most of the functionality got moved to other
+--       libraries except for unsafeStringify which they
+--       felt shouldn't exist.
+--       See the discussion at https://github.com/purescript-deprecated/purescript-globals/issues/22#issuecomment-715625825
+
+-- | Uses the global JSON object to turn anything into a string. Careful! Trying
+-- | to serialize functions returns undefined
+foreign import _unsafeStringify :: forall a. a -> String
+
 -- | Write a JSON string from a type `a`.
 writeJSON :: forall a
   .  WriteForeign a
   => a
   -> String
-writeJSON = unsafeStringify <<< writeImpl
+writeJSON = _unsafeStringify <<< writeImpl
 
 write :: forall a
   .  WriteForeign a
@@ -202,7 +214,7 @@ instance readRecord ::
       fieldListP = RLProxy :: RLProxy fieldList
 
 -- | A class for reading foreign values from properties
-class ReadForeignFields (xs :: RowList) (from :: # Type) (to :: # Type)
+class ReadForeignFields (xs :: RowList Type) (from :: Row Type) (to :: Row Type)
   | xs -> from to where
   getFields :: RLProxy xs
     -> Foreign
@@ -248,7 +260,7 @@ instance readForeignVariant ::
   ) => ReadForeign (Variant variants) where
   readImpl o = readVariantImpl (RLProxy :: RLProxy rl) o
 
-class ReadForeignVariant (xs :: RowList) (row :: # Type)
+class ReadForeignVariant (xs :: RowList Type) (row :: Row Type)
   | xs -> row where
   readVariantImpl :: RLProxy xs
     -> Foreign
@@ -321,7 +333,7 @@ instance recordWriteForeign ::
       rlp = RLProxy :: RLProxy rl
       steps = writeImplFields rlp rec
 
-class WriteForeignFields (rl :: RowList) row (from :: # Type) (to :: # Type)
+class WriteForeignFields (rl :: RowList Type) row (from :: Row Type) (to :: Row Type)
   | rl -> row from to where
   writeImplFields :: forall g. g rl -> Record row -> Builder (Record from) (Record to)
 
@@ -350,7 +362,7 @@ instance writeForeignVariant ::
   ) => WriteForeign (Variant row) where
   writeImpl variant = writeVariantImpl (RLProxy :: RLProxy rl) variant
 
-class WriteForeignVariant (rl :: RowList) (row :: # Type)
+class WriteForeignVariant (rl :: RowList Type) (row :: Row Type)
   | rl -> row where
   writeVariantImpl :: forall g. g rl -> Variant row -> Foreign
 
