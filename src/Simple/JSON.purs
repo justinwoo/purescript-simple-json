@@ -10,6 +10,7 @@ module Simple.JSON
 , read_
 , parseJSON
 , undefined
+, unsafeStringify
 
 , class ReadForeign
 , readImpl
@@ -83,18 +84,12 @@ readJSON_ ::  forall a
   -> Maybe a
 readJSON_ = hush <<< readJSON
 
--- TODO: Should we keep using JSON.stringify or replace it
---       with something else?
---       unsafeStringify used to be a part of
---       purescript-globals which was recently deprecated.
---       Most of the functionality got moved to other
---       libraries except for unsafeStringify which they
---       felt shouldn't exist.
---       See the discussion at https://github.com/purescript-deprecated/purescript-globals/issues/22#issuecomment-715625825
-
 -- | Uses the global JSON object to turn anything into a string. Careful! Trying
 -- | to serialize functions returns undefined
 foreign import _unsafeStringify :: forall a. a -> String
+
+unsafeStringify :: forall a. a -> String
+unsafeStringify = _unsafeStringify
 
 -- | Write a JSON string from a type `a`.
 writeJSON :: forall a
