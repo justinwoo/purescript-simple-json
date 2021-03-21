@@ -13,7 +13,6 @@
   ],
   "dependencies": {
     "purescript-prelude": "^5.0.0",
-    "purescript-typelevel-prelude": "^6.0.0",
     "purescript-record": "^3.0.0",
     "purescript-variant": "^7.0.1",
     "purescript-nullable": "^5.0.0",
