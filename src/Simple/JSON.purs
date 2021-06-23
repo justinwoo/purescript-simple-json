@@ -39,6 +39,8 @@ import Data.Identity (Identity(..))
 import Data.List.NonEmpty (singleton)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Nullable (Nullable, toMaybe, toNullable)
+import Data.Sequence (Seq)
+import Data.Sequence as Seq
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
 import Data.Traversable (sequence, traverse)
 import Data.TraversableWithIndex (traverseWithIndex)
@@ -198,6 +200,14 @@ instance readObject :: ReadForeign a => ReadForeign (Object.Object a) where
         | tagOf value == "Object" = pure $ unsafeFromForeign value
         | otherwise = fail $ TypeMismatch "Object" (tagOf value)
 
+instance readSeq :: ReadForeign a => ReadForeign (Seq a) where
+  readImpl x = do
+      arr <- readArray x
+      y <- traverseWithIndex readAtIdx arr
+      pure $ Seq.fromFoldable y
+    where
+      readAtIdx i f = withExcept (map (ErrorAtIndex i)) (readImpl f)
+
 
 instance readRecord ::
   ( RowToList fields fieldList
@@ -307,6 +317,9 @@ instance writeForeignBoolean :: WriteForeign Boolean where
   writeImpl = unsafeToForeign
 
 instance writeForeignArray :: WriteForeign a => WriteForeign (Array a) where
+  writeImpl xs = unsafeToForeign $ writeImpl <$> xs
+
+instance writeForeignSeq :: WriteForeign a => WriteForeign (Seq.Seq a) where
   writeImpl xs = unsafeToForeign $ writeImpl <$> xs
 
 instance writeForeignMaybe :: WriteForeign a => WriteForeign (Maybe a) where

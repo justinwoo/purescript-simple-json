@@ -1,0 +1,11 @@
+{
+  "name": "purescript-simple-json",
+  "main": "index.js",
+  "repository": "https://github.com/justinwoo/purescript-simple-json",
+  "author": "Przemek Kaminski <pk@intrepidus.pl>",
+  "license": "MIT",
+  "devDependencies": {
+    "purescript": "^0.14.2",
+    "spago": "^0.20.3"
+  }
+}
