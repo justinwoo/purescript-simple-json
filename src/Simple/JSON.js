@@ -1,5 +1,5 @@
-exports._parseJSON = JSON.parse;
+export const _parseJSON = JSON.parse;
 
-exports._undefined = undefined;
+export const _undefined = undefined;
 
-exports._unsafeStringify = JSON.stringify;
+export const _unsafeStringify = JSON.stringify;
