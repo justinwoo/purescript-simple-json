@@ -1,7 +1,0 @@
-{
-  "name": "purescript-simple-json",
-  "devDependencies": {
-    "spago": "^0.20.9"
-  },
-  "dependencies": {}
-}
