@@ -11,7 +11,7 @@ import Foreign as Foreign
 import Record as Record
 import Simple.JSON as JSON
 import Test.Assert (assert)
-import Type.Prelude (SProxy(..))
+import Type.Proxy (Proxy(..))
 
 type RecordWithEither =
   { apple :: Int
@@ -43,8 +43,8 @@ readRecordMisnamedField s = do
   inter <- JSON.readJSON s
   pure $ Record.rename grapeP cherryP inter
   where
-    grapeP = SProxy :: SProxy "grape"
-    cherryP = SProxy :: SProxy "cherry"
+    grapeP = Proxy :: Proxy "grape"
+    cherryP = Proxy :: Proxy "cherry"
 
 main :: Effect Unit
 main = do

@@ -39,7 +39,7 @@ import Data.Identity (Identity(..))
 import Data.List.NonEmpty (singleton)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Nullable (Nullable, toMaybe, toNullable)
-import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
+import Data.Symbol (class IsSymbol, reflectSymbol)
 import Data.Traversable (sequence, traverse)
 import Data.TraversableWithIndex (traverseWithIndex)
 import Data.Variant (Variant, inj, on)
@@ -56,7 +56,7 @@ import Prim.RowList (class RowToList, Cons, Nil, RowList)
 import Record (get)
 import Record.Builder (Builder)
 import Record.Builder as Builder
-import Type.Prelude (Proxy(..))
+import Type.Proxy (Proxy(..))
 
 -- | An alias for the Either result of decoding
 type E a = Either MultipleErrors a
@@ -227,7 +227,7 @@ instance readFieldsCons ::
         value <- withExcept' (readImpl =<< readProp name obj)
         pure $ Builder.insert nameP value
       rest = getFields tailP obj
-      nameP = SProxy :: SProxy name
+      nameP = Proxy :: Proxy name
       tailP = Proxy :: Proxy tail
       name = reflectSymbol nameP
       withExcept' = withExcept <<< map $ ErrorAtProperty name
@@ -280,7 +280,7 @@ instance readVariantCons ::
         (fail <<< ForeignError $ "Did not match variant tag " <> name)
     <|> readVariantImpl (Proxy :: Proxy tail) o
     where
-      namep = SProxy :: SProxy name
+      namep = Proxy :: Proxy name
       name = reflectSymbol namep
 
 -- -- | A class for writing a value into JSON
@@ -341,7 +341,7 @@ instance consWriteForeignFields ::
   ) => WriteForeignFields (Cons name ty tail) row from to where
   writeImplFields _ rec = result
     where
-      namep = SProxy :: SProxy name
+      namep = Proxy :: Proxy name
       value = writeImpl $ get namep rec
       tailp = Proxy :: Proxy tail
       rest = writeImplFields tailp rec
@@ -379,7 +379,7 @@ instance consWriteForeignVariant ::
       (writeVariantImpl (Proxy :: Proxy tail))
       variant
     where
-    namep = SProxy :: SProxy name
+    namep = Proxy :: Proxy name
     writeVariant value = unsafeToForeign
       { type: reflectSymbol namep
       , value: writeImpl value
