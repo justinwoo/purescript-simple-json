@@ -1,7 +1,7 @@
 let
   nixpkgs = builtins.fetchTarball {
-    url = "https://github.com/nixos/nixpkgs/archive/39da4240609ee0d8ea533f142ae4c7e25df95980.tar.gz";
-    sha256 = "10mp5rjnkl0s6pigbnkdf6pjwm074nf4aq7mwhfwxmz5gs5dpi71";
+    url = "https://github.com/NixOS/nixpkgs/archive/refs/tags/21.11.tar.gz";
+    sha256 = "162dywda2dvfj1248afxc45kcrg83appjd0nmdb541hl7rnncf02";
   };
 in
 
@@ -20,7 +20,8 @@ in
     pkgs.mkShell {
       buildInputs = [
         ezPsc.purs-0_15_0
-        pkgs.nodePackages_10_x.bower
-        pkgs.nodePackages_10_x.pulp
+        ezPsc.psc-package
+        ezPsc.spago
+        pkgs.nodejs
       ];
     }
