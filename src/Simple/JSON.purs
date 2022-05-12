@@ -8,6 +8,7 @@ module Simple.JSON
 , read
 , read'
 , read_
+, readAsForeign
 , parseJSON
 , undefined
 , unsafeStringify

@@ -5,22 +5,22 @@ let
   };
 in
 
-{ pkgs ? import nixpkgs {} }:
+{ pkgs ? import nixpkgs { } }:
 
-  let
-    ezPscSrc = pkgs.fetchFromGitHub {
-      owner = "justinwoo";
-      repo = "easy-purescript-nix";
-      rev = "e8a1ffafafcdf2e81adba419693eb35f3ee422f8";
-      sha256 = "0bk32wckk82f1j5i5gva63f3b3jl8swc941c33bqc3pfg5cgkyyf";
-    };
-    ezPsc = import ezPscSrc { inherit pkgs; };
-  in
+let
+  ezPscSrc = pkgs.fetchFromGitHub {
+    owner = "justinwoo";
+    repo = "easy-purescript-nix";
+    rev = "0ad5775c1e80cdd952527db2da969982e39ff592";
+    sha256 = "0x53ads5v8zqsk4r1mfpzf5913byifdpv5shnvxpgw634ifyj1kg";
+  };
+  ezPsc = import ezPscSrc { inherit pkgs; };
+in
 
-    pkgs.mkShell {
-      buildInputs = [
-        ezPsc.purs-0_14_0
-        pkgs.nodePackages_10_x.bower
-        pkgs.nodePackages_10_x.pulp
-      ];
-    }
+pkgs.mkShell {
+  buildInputs = [
+    ezPsc.purs-0_15_0
+    ezPsc.pulp
+    pkgs.nodePackages_10_x.bower
+  ];
+}
