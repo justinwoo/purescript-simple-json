@@ -20,3 +20,7 @@ Pages
   with-affjax
   generics-rep
   faq
+
+.. raw:: html
+
+    <img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=e671985a-ab1f-4d86-8f4a-d2975883fa93" />
