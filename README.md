@@ -1,9 +1,5 @@
 # PureScript-Simple-JSON
 
-https://img.shields.io/github/workflow/status/<user>/<repo>/Run%20Tests
-to
-https://img.shields.io/github/actions/workflow/status/<user>/<repo>/test.yml?branch=main
-
 ![GitHub Workflow Status (with branch)](https://img.shields.io/github/actions/workflow/status/justinwoo/purescript-simple-json/ci.yml?branch=master&style=flat-square&logo=github)
 [<img alt="documentation status" src="https://img.shields.io/readthedocs/purescript-simple-json/latest?logo=read-the-docs&style=for-the-badge" height="20">](https://readthedocs.org/projects/purescript-simple-json/badge/?version=latest)
 
