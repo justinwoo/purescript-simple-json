@@ -1,8 +1,5 @@
 #! /usr/bin/env nix-shell
 #! nix-shell ci.nix -i bash
 
-bower install
-
-pulp build --include test
-
+npx --yes spago@1.0.5 build &&
 node ./test/index.mjs

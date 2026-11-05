@@ -1,0 +1,35 @@
+package:
+  name: simple-json
+  publish:
+    version: 9.0.1
+    license: MIT
+    location:
+      githubOwner: justinwoo
+      githubRepo: purescript-simple-json
+  dependencies:
+    - arrays: ">=7.0.0 <8.0.0"
+    - bifunctors: ">=6.0.0 <7.0.0"
+    - control: ">=6.0.0 <7.0.0"
+    - effect: ">=4.0.0 <5.0.0"
+    - either: ">=6.0.0 <7.0.0"
+    - exceptions: ">=6.0.0 <7.0.0"
+    - foldable-traversable: ">=6.0.0 <7.0.0"
+    - foreign: ">=7.0.0 <8.0.0"
+    - foreign-object: ">=4.0.0 <5.0.0"
+    - identity: ">=6.0.0 <7.0.0"
+    - lists: ">=7.0.0 <8.0.0"
+    - maybe: ">=6.0.0 <7.0.0"
+    - nullable: ">=6.0.0 <7.0.0"
+    - partial: ">=4.0.0 <5.0.0"
+    - prelude: ">=6.0.0 <7.0.0"
+    - record: ">=4.0.0 <5.0.0"
+    - transformers: ">=6.0.0 <7.0.0"
+    - variant: ">=8.0.0 <9.0.0"
+  test:
+    main: Test.Main
+    dependencies:
+      - assert: ">=6.0.0 <7.0.0"
+      - console: ">=6.0.0 <7.0.0"
+      - nonempty: ">=7.0.0 <8.0.0"
+      - typelevel-prelude: ">=7.0.0 <8.0.0"
+workspace: {}
