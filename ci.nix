@@ -19,8 +19,17 @@ in
 
 pkgs.mkShell {
   buildInputs = [
-    ezPsc.purs-0_15_0
-    ezPsc.pulp
-    pkgs.nodePackages_10_x.bower
+    (ezPsc.purs-0_15_0.overrideAttrs (_: {
+      version = "v0.15.4";
+      src = pkgs.fetchurl (
+        if pkgs.stdenv.isDarwin then {
+          url = "https://github.com/purescript/purescript/releases/download/v0.15.4/macos.tar.gz";
+          sha256 = "cd08d63f62c7fcb553611352f07fd003bf2baf3239aaad1845e45e9498617a66";
+        } else {
+          url = "https://github.com/purescript/purescript/releases/download/v0.15.4/linux64.tar.gz";
+          sha256 = "3e2a59dbac49564b7ceedb5b102eecf2b0b24765dbfcc1eed5ac4ea396c6e68e";
+        }
+      );
+    }))
   ];
 }
